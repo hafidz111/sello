@@ -196,7 +196,14 @@ flutter:
 
 ## Firebase
 
-- File `lib/firebase_options.dart` sudah ada (hasil FlutterFire) untuk Android & iOS.
+- File konfigurasi Firebase karena mengandung API key.
+- Untuk menghasilkan file aslinya, jalankan FlutterFire CLI:
+  ```bash
+  dart pub global activate flutterfire_cli
+  flutterfire configure
+  ```
+  Perintah ini akan membuat `lib/firebase_options.dart` dan
+  `android/app/google-services.json` sesuai project Firebase-mu.
 - **Namun Firebase belum diinisialisasi** di `main.dart` dan belum digunakan fitur apa pun.
 - Untuk mengaktifkannya nanti, tambahkan pemanggilan berikut di dalam `main()`
   (setelah `WidgetsFlutterBinding.ensureInitialized()`):
@@ -290,5 +297,3 @@ File berikut **tidak** boleh di-commit (sudah ada di `.gitignore`):
 - [ ] Pengujian (unit/widget/integration)
 
 ---
-
-© 2026 Titik Senyap Studio.

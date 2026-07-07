@@ -15,9 +15,10 @@ abstract final class FeatureData {
     ),
     FeatureItem(
       id: 'foto_produk',
-      title: 'Foto Produk',
-      description: 'Foto produk untuk catat penjualan secara otomatis.',
-      icon: Icons.camera_alt_rounded,
+      title: 'Scan Produk',
+      description:
+          'Scan/foto produk → AI kenali produknya, lalu isi jumlah (pcs) → penjualan tercatat.',
+      icon: Icons.qr_code_scanner_rounded,
       color: Color(0xFF7C3AED),
       route: '/foto-produk',
     ),

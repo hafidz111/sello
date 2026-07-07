@@ -46,3 +46,8 @@ app.*.map.json
 
 .context/
 android/key.properties
+
+# Environment
+.env
+.env.*
+!.env.example

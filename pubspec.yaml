@@ -12,6 +12,10 @@ dependencies:
 
   cupertino_icons: ^1.0.8
   provider: ^6.1.5
+  firebase_auth: ^6.5.4
+  firebase_core: ^4.11.0
+  supabase_flutter: ^2.16.0
+  flutter_dotenv: ^6.0.1
 
 dev_dependencies:
   flutter_test:
@@ -20,3 +24,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - .env

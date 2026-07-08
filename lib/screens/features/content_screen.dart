@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:sello/widgets/common/placeholder_screen.dart';
 
-class KontenScreen extends StatelessWidget {
-  const KontenScreen({super.key});
+class ContentScreen extends StatelessWidget {
+  const ContentScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

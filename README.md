@@ -130,10 +130,10 @@ lib/
 │   ├── home/home_screen.dart
 │   ├── shell/main_shell.dart     # IndexedStack + bottom nav
 │   ├── menu/menu_screen.dart
-│   └── features/                 # Placeholder: kasir, konten, laporan
-│       ├── kasir_screen.dart
-│       ├── konten_screen.dart
-│       └── laporan_screen.dart
+│   └── features/                 # cashier (AI), content, report
+│       ├── cashier_screen.dart
+│       ├── content_screen.dart
+│       └── report_screen.dart
 │
 ├── styles/
 │   ├── app_colors.dart           # Palet warna (tema biru)

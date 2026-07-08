@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sello/models/nav_item.dart';
 import 'package:sello/providers/navigation_provider.dart';
-import 'package:sello/screens/features/kasir_screen.dart';
-import 'package:sello/screens/features/konten_screen.dart';
-import 'package:sello/screens/features/laporan_screen.dart';
+import 'package:sello/screens/features/cashier_screen.dart';
+import 'package:sello/screens/features/content_screen.dart';
+import 'package:sello/screens/features/report_screen.dart';
 import 'package:sello/screens/home/home_screen.dart';
 import 'package:sello/screens/menu/menu_screen.dart';
 import 'package:sello/styles/app_colors.dart';
@@ -44,9 +44,9 @@ class MainShell extends StatelessWidget {
 
   static const _screens = [
     HomeScreen(),
-    KasirScreen(),
-    KontenScreen(),
-    LaporanScreen(),
+    CashierScreen(),
+    ContentScreen(),
+    ReportScreen(),
     MenuScreen(),
   ];
 

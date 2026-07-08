@@ -16,4 +16,15 @@ abstract final class Env {
   static String get supabaseUrl => _require('SUPABASE_URL');
 
   static String get supabaseAnonKey => _require('SUPABASE_ANON_KEY');
+
+  static String get geminiApiKey => _require('GEMINI_API_KEY');
+
+  static bool get hasGeminiApiKey =>
+      (dotenv.maybeGet('GEMINI_API_KEY') ?? '').isNotEmpty;
+
+  /// Opsional. Bila kosong, AiService memakai model default.
+  static String? get geminiModel {
+    final value = dotenv.maybeGet('GEMINI_MODEL');
+    return (value == null || value.isEmpty) ? null : value;
+  }
 }

@@ -5,34 +5,34 @@ import 'package:sello/styles/app_colors.dart';
 abstract final class FeatureData {
   static const List<FeatureItem> all = [
     FeatureItem(
-      id: 'kasir_suara',
+      id: 'voice_cashier',
       title: 'Kasir Suara & Teks',
       description:
           'Catat penjualan dengan kalimat natural. AI ekstrak item, harga, stok otomatis.',
       icon: Icons.mic_rounded,
       color: AppColors.primary,
-      route: '/kasir',
+      route: '/cashier',
     ),
     FeatureItem(
-      id: 'foto_produk',
+      id: 'product_scan',
       title: 'Scan Produk',
       description:
           'Scan/foto produk → AI kenali produknya, lalu isi jumlah (pcs) → penjualan tercatat.',
       icon: Icons.qr_code_scanner_rounded,
       color: Color(0xFF7C3AED),
-      route: '/foto-produk',
+      route: '/product-scan',
     ),
     FeatureItem(
-      id: 'foto_konten',
+      id: 'photo_to_content',
       title: 'Foto ke Konten',
       description:
           'Unggah foto → AI hasilkan caption IG/TikTok, hashtag lokal & copy iklan.',
       icon: Icons.auto_awesome_rounded,
       color: Color(0xFFEC4899),
-      route: '/konten',
+      route: '/content',
     ),
     FeatureItem(
-      id: 'whatsapp',
+      id: 'whatsapp_assistant',
       title: 'Asisten WhatsApp',
       description:
           'Chatbot AI merespons FAQ, cek stok & proses order via WhatsApp Business.',
@@ -41,33 +41,33 @@ abstract final class FeatureData {
       route: '/whatsapp',
     ),
     FeatureItem(
-      id: 'laporan',
+      id: 'business_report',
       title: 'Laporan Bisnis',
       description:
           'Ringkasan harian/mingguan dalam bahasa manusia yang mudah dipahami.',
       icon: Icons.analytics_rounded,
       color: Color(0xFFF59E0B),
-      route: '/laporan',
+      route: '/report',
     ),
     FeatureItem(
-      id: 'terjemah',
+      id: 'translate_export',
       title: 'Terjemah & Ekspor',
       description:
           'Deskripsi produk ID, EN, AR, ZH untuk pasar internasional.',
       icon: Icons.translate_rounded,
       color: Color(0xFF06B6D4),
-      route: '/terjemah',
+      route: '/translate',
     ),
     FeatureItem(
-      id: 'katalog',
+      id: 'digital_catalog',
       title: 'Katalog Digital',
       description: 'Toko online mini yang bisa dibagikan lewat link/WhatsApp.',
       icon: Icons.storefront_rounded,
       color: Color(0xFF8B5CF6),
-      route: '/katalog',
+      route: '/catalog',
     ),
     FeatureItem(
-      id: 'offline',
+      id: 'offline_mode',
       title: 'Mode Offline',
       description:
           'Pencatatan transaksi tanpa internet, sinkron otomatis saat online.',
@@ -76,12 +76,12 @@ abstract final class FeatureData {
       route: '/offline',
     ),
     FeatureItem(
-      id: 'edukasi',
+      id: 'micro_education',
       title: 'Edukasi Mikro',
       description: 'Tips bisnis personal dari AI berdasarkan data penjualan Anda.',
       icon: Icons.school_rounded,
       color: Color(0xFFEF4444),
-      route: '/edukasi',
+      route: '/education',
     ),
   ];
 }

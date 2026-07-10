@@ -1,4 +1,3 @@
-/// Satu baris item penjualan hasil ekstraksi AI dari kalimat natural.
 class SaleItem {
   const SaleItem({
     required this.name,
@@ -6,16 +5,10 @@ class SaleItem {
     required this.unitPrice,
   });
 
-  /// Nama produk, mis. "Keripik Singkong".
   final String name;
-
-  /// Jumlah yang terjual (pcs). Minimal 1.
   final int quantity;
-
-  /// Harga satuan dalam Rupiah. 0 bila AI tidak menemukan harga.
   final int unitPrice;
 
-  /// Total untuk baris ini (quantity * unitPrice).
   int get subtotal => quantity * unitPrice;
 
   factory SaleItem.fromJson(Map<String, dynamic> json) {
@@ -29,10 +22,10 @@ class SaleItem {
   }
 
   Map<String, dynamic> toJson() => {
-        'name': name,
-        'quantity': quantity,
-        'unit_price': unitPrice,
-      };
+    'name': name,
+    'quantity': quantity,
+    'unit_price': unitPrice,
+  };
 
   SaleItem copyWith({String? name, int? quantity, int? unitPrice}) {
     return SaleItem(
@@ -42,7 +35,6 @@ class SaleItem {
     );
   }
 
-  /// Menerima int, double, atau String angka dari respons AI.
   static int _asInt(Object? value, {required int fallback}) {
     if (value is int) return value;
     if (value is double) return value.round();

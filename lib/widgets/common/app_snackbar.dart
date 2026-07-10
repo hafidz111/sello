@@ -2,13 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:sello/styles/app_colors.dart';
 import 'package:sello/styles/app_text_styles.dart';
 
-/// Jenis notifikasi yang menentukan warna & ikon snackbar.
 enum _SnackbarType { success, error, warning, info }
 
-/// Snackbar kustom aplikasi.
-///
-/// Semua teks pesan yang dikirim harus dalam Bahasa Indonesia yang mudah
-/// dipahami, karena ditampilkan langsung ke pengguna.
 abstract final class AppSnackbar {
   static void success(BuildContext context, String message) =>
       _show(context, message, _SnackbarType.success);
@@ -22,11 +17,7 @@ abstract final class AppSnackbar {
   static void info(BuildContext context, String message) =>
       _show(context, message, _SnackbarType.info);
 
-  static void _show(
-    BuildContext context,
-    String message,
-    _SnackbarType type,
-  ) {
+  static void _show(BuildContext context, String message, _SnackbarType type) {
     final (color, icon) = _styleOf(type);
     final messenger = ScaffoldMessenger.of(context);
 

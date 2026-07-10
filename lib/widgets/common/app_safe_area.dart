@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sello/widgets/common/responsive_center.dart';
 
-/// Wrapper standar: SafeArea + batas lebar responsif (tablet).
 class AppSafeArea extends StatelessWidget {
   const AppSafeArea({
     super.key,

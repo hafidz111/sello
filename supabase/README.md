@@ -33,4 +33,4 @@ supabase db push
 ## Catatan
 
 - Jangan edit migrasi yang sudah pernah dijalankan di production. Buat file migrasi baru dengan timestamp baru.
-- `schema.sql` di root folder ini hanya salinan referensi; yang dipakai integrasi GitHub adalah `migrations/*.sql`.
+- Semua perubahan database hanya lewat `migrations/*.sql`, lalu commit dan push ke GitHub.

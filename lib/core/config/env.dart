@@ -7,7 +7,7 @@ abstract final class Env {
     final value = dotenv.maybeGet(key);
     if (value == null || value.isEmpty) {
       throw StateError(
-        'Environment tidak ditemukan.'
+          'Environment tidak ditemukan.'
       );
     }
     return value;
@@ -22,7 +22,6 @@ abstract final class Env {
   static bool get hasGeminiApiKey =>
       (dotenv.maybeGet('GEMINI_API_KEY') ?? '').isNotEmpty;
 
-  /// Opsional. Bila kosong, AiService memakai model default.
   static String? get geminiModel {
     final value = dotenv.maybeGet('GEMINI_MODEL');
     return (value == null || value.isEmpty) ? null : value;

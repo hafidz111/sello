@@ -1,18 +1,20 @@
 # Sello — Jualan Cerdas dengan AI
 
 Aplikasi mobile (Flutter) untuk membantu UMKM mengelola penjualan dengan bantuan AI:
-pencatatan kasir via suara/teks, pembuatan konten dari foto produk, laporan bisnis
-berbahasa manusia, katalog digital, dan lainnya.
+pencatatan kasir via suara/teks, scan produk, pembuatan konten dari foto produk, laporan
+bisnis berbahasa manusia, katalog digital, dan lainnya.
 
-> **Status proyek:** tahap awal. Kerangka aplikasi (UI, navigasi, tema, konfigurasi
-> backend) sudah jadi. Sebagian besar fitur inti **belum diimplementasikan** dan masih
-> berupa halaman placeholder. Lihat [Status Fitur](#status-fitur).
+> **Status proyek:** tahap awal. Kerangka aplikasi sudah jadi. **Kasir AI (teks)**, **daftar
+> produk dengan foto**, **scan visual + match katalog**, **katalog produk**, dan **statistik
+> beranda** sudah berjalan. Barcode/Code 128, suara, dan fitur 3–9 lainnya masih rencana.
+> Lihat [Status Fitur](#status-fitur).
 
 ---
 
 ## Daftar Isi
 
 - [Tentang Aplikasi](#tentang-aplikasi)
+- [Arsitektur Produk & Scan](#arsitektur-produk--scan)
 - [Status Fitur](#status-fitur)
 - [Teknologi](#teknologi)
 - [Struktur Folder](#struktur-folder)
@@ -22,6 +24,7 @@ berbahasa manusia, katalog digital, dan lainnya.
 - [Menjalankan Aplikasi](#menjalankan-aplikasi)
 - [Build & Rilis ke Play Store](#build--rilis-ke-play-store)
 - [State Management](#state-management)
+- [Konvensi Kode](#konvensi-kode)
 - [Tema & Desain](#tema--desain)
 - [Responsivitas](#responsivitas)
 - [Keamanan & File Rahasia](#keamanan--file-rahasia)
@@ -44,47 +47,87 @@ Alur aplikasi saat ini:
 
 ---
 
+## Arsitektur Produk & Scan
+
+### Yang sudah berjalan (visual match)
+
+1. **Daftar produk** (`ProductRegisterScreen`): nama, harga, stok, foto referensi
+   (depan/samping/label) → disimpan ke Supabase (`products`, `product_images`, bucket
+   `product-images`).
+2. **Scan penjualan** (`ProductScanScreen`): kamera live → AI `matchProductToCatalog` →
+   jika confidence ≥ 65% produk terklaim otomatis → atur qty → `recordSale` (kurangi stok).
+3. **Katalog** (`ProductListScreen`): lihat produk terdaftar dari fitur Katalog Digital.
+
+### Rencana berikutnya (barcode & suara)
+
+| Fase | Metode | Status |
+|------|--------|--------|
+| Daftar | Suara lengkap, scan barcode retail, generate Code 128 | Belum |
+| Jualan | Scan Code 128 / barcode → lookup DB | Belum (teman user) |
+| Jualan | Suara singkat → fuzzy match nama | Belum |
+
+### Skema database (migrasi `supabase/migrations/`)
+
+```
+products          id, user_id, name, price, stock, created_at
+product_images    product_id, storage_path, angle_label, sort_order
+sales             user_id, product_id, quantity, unit_price, total, created_at
+```
+
+Kolom `code_type` / `code_value` untuk barcode akan ditambahkan di migrasi terpisah.
+
+### Alur scan visual (implementasi saat ini)
+
+```
+Kamera live → ambil frame → AI bandingkan dengan foto katalog user
+        │
+        ├── Cocok (≥65%) → auto klaim → stepper qty → catat penjualan
+        └── Tidak cocok → pilih manual / daftar produk baru
+```
+
+Detail arsitektur lengkap ada di [`.context/context.md`](.context/context.md).
+
+---
+
 ## Status Fitur
 
-Legenda: ✅ Selesai · 🟡 Sebagian / placeholder · ⛔ Belum dibuat
+Legenda: **Selesai** · **Sebagian** · **Belum**
 
 ### Fitur Aplikasi (UI/Kerangka)
 
-| Fitur                  | Status | Keterangan                                                                                               |
-|------------------------|:------:|----------------------------------------------------------------------------------------------------------|
-| Halaman Login          |   🟡   | **Dummy** — menerima email & password apa saja, belum terhubung ke autentikasi asli (Supabase/Firebase). |
-| Halaman Beranda        |   ✅    | Header sapaan, kartu statistik (nilai masih dummy `0`), grid & list fitur.                               |
-| Floating bottom navbar |   ✅    | 5 tab, animasi aktif, responsif tablet.                                                                  |
-| Halaman Menu           |   ✅    | Daftar semua fitur + tombol logout.                                                                      |
-| Logout                 |   ✅    | Dialog konfirmasi, reset ke tab Beranda.                                                                 |
-| SafeArea global        |   ✅    | Diterapkan di seluruh layar.                                                                             |
-| Responsivitas tablet   |   ✅    | Breakpoint & layout menyesuaikan lebar layar.                                                            |
+| Fitur | Status | Keterangan |
+|-------|:------:|------------|
+| Halaman Login | Sebagian | Dummy, menerima email & password apa saja. Belum auth asli. |
+| Halaman Beranda | Selesai | Statistik penjualan & transaksi dari Supabase (`DashboardProvider`). |
+| Floating bottom navbar | Selesai | 5 tab, animasi aktif, responsif tablet. |
+| Halaman Menu | Selesai | Daftar semua fitur + tombol logout. |
+| Logout | Selesai | Dialog konfirmasi, reset ke tab Beranda. |
+| AppSnackbar | Selesai | Notifikasi error/success/warning/info kustom. |
+| SafeArea global | Selesai | Diterapkan di seluruh layar. |
+| Responsivitas tablet | Selesai | Breakpoint & layout menyesuaikan lebar layar. |
 
 ### Fitur Utama (Bisnis) — 9 Fitur
 
-> Semua fitur di bawah **belum memiliki logika/AI**. Yang sudah ada hanya entri di daftar
-> fitur (`feature_data.dart`) dan sebagian punya halaman placeholder "Segera hadir".
-
-| # | Fitur                         | Status | Keterangan                                                                                                                      |
-|---|-------------------------------|:------:|---------------------------------------------------------------------------------------------------------------------------------|
-| 1 | Kasir Suara & Teks Cerdas     |   🟡   | Placeholder. Belum ada input suara/teks maupun ekstraksi AI.                                                                    |
-| 2 | Scan Produk (catat penjualan) |   ⛔    | Belum ada halaman. Alur: scan/foto produk → AI kenali produk → user isi jumlah (pcs) → catat penjualan. Baru terdaftar di menu. |
-| 3 | Foto ke Konten                |   🟡   | Placeholder. Belum ada upload foto & generator caption.                                                                         |
-| 4 | Asisten Chat WhatsApp         |   ⛔    | Belum ada halaman & integrasi WhatsApp Business API.                                                                            |
-| 5 | Laporan Bisnis                |   🟡   | Placeholder. Belum ada agregasi data & ringkasan AI.                                                                            |
-| 6 | Terjemah & Ekspor Otomatis    |   ⛔    | Belum ada halaman & mesin terjemahan.                                                                                           |
-| 7 | Katalog Digital Siap Jual     |   ⛔    | Belum ada halaman & pembuatan link katalog.                                                                                     |
-| 8 | Mode Offline Ringan           |   ⛔    | Belum ada penyimpanan lokal & sinkronisasi.                                                                                     |
-| 9 | Edukasi Mikro                 |   ⛔    | Belum ada halaman & tips berbasis data.                                                                                         |
+| # | Fitur | Status | Keterangan |
+|---|-------|:------:|------------|
+| 1 | Kasir Suara & Teks | Sebagian | Tab Kasir: input teks → Gemini ekstrak item/qty/harga. Suara belum. |
+| 2 | Scan Produk | Sebagian | Kamera → AI match katalog → catat penjualan. Barcode/Code 128 belum. |
+| 3 | Foto ke Konten | Belum | Placeholder. Upload foto & generator caption. |
+| 4 | Asisten WhatsApp | Belum | Belum ada halaman & integrasi WhatsApp Business API. |
+| 5 | Laporan Bisnis | Belum | Placeholder. Agregasi data & ringkasan AI. |
+| 6 | Terjemah & Ekspor | Belum | Belum ada halaman & mesin terjemahan. |
+| 7 | Katalog Digital | Sebagian | Daftar produk terdaftar (`ProductListScreen`). Link share belum. |
+| 8 | Mode Offline | Belum | Belum ada penyimpanan lokal & sinkronisasi. |
+| 9 | Edukasi Mikro | Belum | Belum ada halaman & tips berbasis data. |
 
 ### Backend & Integrasi
 
-| Komponen         | Status | Keterangan                                                                                                         |
-|------------------|:------:|--------------------------------------------------------------------------------------------------------------------|
-| Supabase         |   🟡   | Terkonfigurasi & di-inisialisasi saat startup, **tetapi belum dipakai** (belum ada tabel, query, atau auth).       |
-| Firebase         |   🟡   | Dependency & `firebase_options.dart` sudah ada, **tetapi belum di-inisialisasi** di `main.dart` dan belum dipakai. |
-| Autentikasi asli |   ⛔    | Masih dummy. Belum terhubung Supabase Auth / Firebase Auth.                                                        |
-| Layanan AI       |   ⛔    | Belum ada integrasi model AI apa pun.                                                                              |
+| Komponen | Status | Keterangan |
+|----------|:------:|------------|
+| Supabase | Sebagian | Tabel produk, gambar, penjualan via migrasi GitHub. Auth belum. |
+| Firebase | Sebagian | Dependency & `firebase_options.dart` ada. Belum di-init di `main.dart`. |
+| Autentikasi asli | Belum | Masih dummy (`userId` dari email). Belum Supabase Auth. |
+| Layanan AI (Gemini) | Sebagian | `extractSale`, `matchProductToCatalog` berjalan. Suara belum. |
 
 ---
 
@@ -92,10 +135,14 @@ Legenda: ✅ Selesai · 🟡 Sebagian / placeholder · ⛔ Belum dibuat
 
 - **Flutter** (Dart SDK `^3.12.2`)
 - **Provider** — state management
-- **supabase_flutter** — backend (belum dipakai penuh)
+- **dio** — HTTP client terpusat (`DioClient`, `GeminiApiService`)
+- **supabase_flutter** — produk, gambar, penjualan, storage
+- **camera**, **image_picker**, **permission_handler** — scan & daftar produk
 - **firebase_core / firebase_auth** — terpasang, belum diaktifkan
 - **flutter_dotenv** — konfigurasi environment via `.env`
 - **flutter_lints** — aturan linting
+
+Package rencana: `mobile_scanner`, `barcode_widget`, `speech_to_text`.
 
 ---
 
@@ -103,51 +150,72 @@ Legenda: ✅ Selesai · 🟡 Sebagian / placeholder · ⛔ Belum dibuat
 
 ```
 lib/
-├── main.dart                     # Entry point: load .env → init Supabase → runApp
+├── main.dart                     # Entry: load .env → init Supabase → runApp
 ├── app.dart                      # MultiProvider + MaterialApp + AuthGate
 ├── firebase_options.dart         # Konfigurasi Firebase (belum dipakai)
 │
 ├── core/
 │   ├── config/
-│   │   ├── env.dart              # Akses variabel .env (Env.supabaseUrl, dll)
+│   │   ├── env.dart              # Env.supabaseUrl, geminiApiKey, geminiModel, dll
 │   │   └── supabase_config.dart  # SupabaseConfig.initialize() + .client
+│   ├── network/
+│   │   ├── dio_client.dart       # Dio terpusat (Gemini + REST custom)
+│   │   └── network_exception.dart
 │   ├── constants/
-│   │   ├── app_constants.dart    # Nama app, tagline
-│   │   └── feature_data.dart     # Daftar 9 fitur
+│   │   ├── app_constants.dart
+│   │   ├── feature_data.dart     # Daftar 9 fitur (id & route Bahasa Inggris)
+│   │   └── gemini_schemas.dart   # JSON schema untuk respons AI terstruktur
 │   └── utils/
-│       └── responsive.dart       # Breakpoint & helper responsif
+│       ├── responsive.dart
+│       ├── currency.dart         # formatRupiah()
+│       └── feature_navigation.dart
 │
 ├── models/
 │   ├── feature_item.dart
-│   └── nav_item.dart
+│   ├── nav_item.dart
+│   ├── sale_item.dart
+│   ├── product.dart
+│   ├── product_image.dart
+│   ├── product_match_result.dart
+│   └── dashboard_stats.dart
 │
 ├── providers/
-│   ├── auth_provider.dart        # Login/logout (dummy), userName
-│   └── navigation_provider.dart  # Index bottom nav
+│   ├── auth_provider.dart
+│   ├── navigation_provider.dart
+│   └── dashboard_provider.dart
+│
+├── services/
+│   ├── ai_service.dart           # Logika bisnis AI
+│   ├── gemini_api_service.dart   # HTTP Gemini via Dio
+│   └── product_service.dart
 │
 ├── screens/
 │   ├── auth/login_screen.dart
 │   ├── home/home_screen.dart
-│   ├── shell/main_shell.dart     # IndexedStack + bottom nav
+│   ├── shell/main_shell.dart
 │   ├── menu/menu_screen.dart
-│   └── features/                 # cashier (AI), content, report
+│   └── features/
 │       ├── cashier_screen.dart
 │       ├── content_screen.dart
-│       └── report_screen.dart
+│       ├── report_screen.dart
+│       ├── product_register_screen.dart
+│       ├── product_scan_screen.dart
+│       └── product_list_screen.dart
 │
 ├── styles/
-│   ├── app_colors.dart           # Palet warna (tema biru)
+│   ├── app_colors.dart
 │   ├── app_text_styles.dart
 │   └── app_theme.dart
 │
 └── widgets/
     ├── navigation/floating_bottom_nav.dart
-    └── common/
-        ├── app_safe_area.dart
-        ├── responsive_center.dart
-        ├── feature_card.dart
-        ├── placeholder_screen.dart
-        └── logout_button.dart
+    ├── common/
+    │   ├── app_safe_area.dart
+    │   ├── app_snackbar.dart
+    │   └── ...
+    └── features/                 # UI per fitur (wajib dipisah dari screen)
+        └── <feature_name>/
+            └── <widget_name>.dart
 ```
 
 ---
@@ -158,6 +226,7 @@ lib/
 - Android Studio / VS Code + plugin Flutter
 - JDK 17 (untuk build Android)
 - Akun & project [Supabase](https://supabase.com) (untuk `.env`)
+- API key [Google AI Studio](https://aistudio.google.com/apikey) (untuk Gemini)
 
 ---
 
@@ -166,49 +235,36 @@ lib/
 Aplikasi memuat kredensial dari file `.env` di root proyek (via `flutter_dotenv`).
 File ini **tidak** ikut di-commit (sudah masuk `.gitignore`).
 
-### Langkah:
+### Langkah
 
-1. Salin template:
-   ```bash
-   copy .env.example .env      # Windows
-   # atau: cp .env.example .env
-   ```
-2. Isi nilai dari **Supabase Dashboard → Settings → API**:
+1. Buat file `.env` di root proyek.
+2. Isi nilai:
    ```
    SUPABASE_URL=https://xxxxxxxxxxxx.supabase.co
    SUPABASE_ANON_KEY=eyJhbGci...
+   GEMINI_API_KEY=your_gemini_api_key
+   GEMINI_MODEL=gemini-3.5-flash
    ```
 
-> `SUPABASE_URL` dan anon/publishable key memang **bersifat publik** dan aman berada di
-> aplikasi client. Keamanan data yang sesungguhnya bergantung pada **Row Level Security
-> (RLS)** di Supabase. **Jangan pernah** memasukkan `service_role` key ke `.env` aplikasi
-> ini.
+`GEMINI_MODEL` opsional. Bila kosong, memakai `gemini-3.5-flash`.
 
-`.env` sudah didaftarkan sebagai asset di `pubspec.yaml`:
+> `SUPABASE_URL` dan anon key bersifat publik dan aman di client. Keamanan data bergantung
+> pada **Row Level Security (RLS)** di Supabase. Jangan masukkan `service_role` key ke app.
 
-```yaml
-flutter:
-  assets:
-    - .env
-```
+`.env` didaftarkan sebagai asset di `pubspec.yaml`.
 
 ---
 
 ## Firebase
 
 - File konfigurasi Firebase karena mengandung API key.
-- Untuk menghasilkan file aslinya, jalankan FlutterFire CLI:
+- Generate dengan FlutterFire CLI:
   ```bash
   dart pub global activate flutterfire_cli
   flutterfire configure
   ```
-  Perintah ini akan membuat `lib/firebase_options.dart` dan
-  `android/app/google-services.json` sesuai project Firebase-mu.
-- **Namun Firebase belum diinisialisasi** di `main.dart` dan belum digunakan fitur apa pun.
-- Untuk mengaktifkannya nanti, tambahkan pemanggilan berikut di dalam `main()`
-  (setelah `WidgetsFlutterBinding.ensureInitialized()`):
-
-  > `await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);`
+- **Belum diinisialisasi** di `main.dart` dan belum dipakai fitur apa pun.
+- Aktivasi nanti: `await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);`
 
 ---
 
@@ -219,46 +275,80 @@ flutter pub get
 flutter run
 ```
 
-Karena login masih **dummy**, Anda bisa masuk dengan mengisi email & password apa saja
-(asal tidak kosong).
+Login masih **dummy**: email & password apa saja (asal tidak kosong).
+Tab **Kasir** dan **Scan Produk** membutuhkan `GEMINI_API_KEY` di `.env`.
+
+### Database Supabase
+
+Migrasi ada di `supabase/migrations/`. Push ke GitHub agar Supabase GitHub Integration
+menerapkan skema otomatis:
+
+```bash
+git add supabase/migrations/
+git commit -m "Add products migration"
+git push
+```
+
+Cek status di Supabase Dashboard → Database → Migrations (**Applied**).
+Tanpa migrasi, fitur produk menampilkan pesan bahwa tabel belum dibuat.
 
 ---
 
 ## Build & Rilis ke Play Store
 
-Panduan lengkap ada di [`PLAYSTORE.md`](.context/PLAYSTORE.md). Ringkasnya:
+Panduan lengkap: [`.context/PLAYSTORE.md`](.context/PLAYSTORE.md).
 
 1. Siapkan signing key (`android/key.properties` + `android/app/upload-keystore.jks`).
    Script bantu: `android/setup_signing.ps1`.
-2. Build App Bundle:
-   ```bash
-   flutter build appbundle --release
-   ```
-   Output: `build/app/outputs/bundle/release/app-release.aab`
+2. Build: `flutter build appbundle --release`
 3. Upload `.aab` ke [Google Play Console](https://play.google.com/console).
 
 ---
 
 ## State Management
 
-Menggunakan **Provider** (`ChangeNotifier`). Provider didaftarkan di `app.dart`:
+**Provider** (`ChangeNotifier`), didaftarkan di `app.dart`:
 
-| Provider             | Fungsi                                                  |
-|----------------------|---------------------------------------------------------|
-| `AuthProvider`       | Status login (dummy), `userName`, `login()`, `logout()` |
-| `NavigationProvider` | Index tab bottom navigation aktif                       |
+| Provider | Fungsi |
+|----------|--------|
+| `AuthProvider` | Status login (dummy), `userId`, `userName`, `login()`, `logout()` |
+| `NavigationProvider` | Index tab bottom navigation aktif |
+| `DashboardProvider` | Statistik penjualan & transaksi dari Supabase |
 
-Logout dilakukan dengan: `NavigationProvider.setIndex(0)` lalu `AuthProvider.logout()`.
+Logout: `NavigationProvider.setIndex(0)` lalu `AuthProvider.logout()`.
+
+---
+
+## Konvensi Kode
+
+- Penamaan kode (file, folder, class, variabel, id, route): **Bahasa Inggris**
+- Teks UI & pesan error/success/warning: **Bahasa Indonesia**, ramah untuk awam
+- Notifikasi: `AppSnackbar` (`lib/widgets/common/app_snackbar.dart`)
+- AI: semua lewat `AiService`, HTTP Gemini lewat `GeminiApiService` + Dio
+- Warna: `AppColors.*`, teks: `AppTextStyles.*` (jangan hardcode di widget)
+- Logika bisnis di service/provider, bukan di widget
+
+### UI wajib dipisah jadi widget
+
+Jangan menumpuk seluruh tampilan di satu file `*_screen.dart`. Screen hanya mengatur
+state, provider, navigasi, dan merakit widget anak.
+
+| Lokasi | Isi |
+|--------|-----|
+| `screens/features/` | Orchestrasi layar (tipis) |
+| `widgets/features/<fitur>/` | Bagian UI khusus fitur itu (satu widget per file) |
+| `widgets/common/` | Widget dipakai lintas fitur |
+
+Widget private (`_Foo`) di file screen hanya untuk potongan sangat kecil (sekitar 30 baris
+ke bawah). Selain itu wajib diekstrak ke `widgets/features/`.
 
 ---
 
 ## Tema & Desain
 
-- Tema **biru**, warna terpusat di `lib/styles/app_colors.dart` (mis. primary `#2563EB`).
+- Tema biru, warna di `lib/styles/app_colors.dart` (primary `#2563EB`).
 - Gaya teks di `lib/styles/app_text_styles.dart`.
-- Konfigurasi `ThemeData` di `lib/styles/app_theme.dart` (Material 3).
-- **Aturan:** jangan hardcode warna/teks di widget — selalu pakai `AppColors.*` dan
-  `AppTextStyles.*`.
+- `ThemeData` di `lib/styles/app_theme.dart` (Material 3).
 
 ---
 
@@ -266,11 +356,11 @@ Logout dilakukan dengan: `NavigationProvider.setIndex(0)` lalu `AuthProvider.log
 
 Helper di `lib/core/utils/responsive.dart`:
 
-| Layar           | Grid fitur | Padding | Lebar konten |
-|-----------------|:----------:|:-------:|:------------:|
-| Phone (<600px)  |  2 kolom   |   20    |    penuh     |
-| Tablet (≥600px) |  3 kolom   |   32    |    720px     |
-| Large (≥900px)  |  4 kolom   |   32    |    960px     |
+| Layar | Grid fitur | Padding | Lebar konten |
+|-------|:----------:|:-------:|:------------:|
+| Phone (<600px) | 2 kolom | 20 | penuh |
+| Tablet (≥600px) | 3 kolom | 32 | 720px |
+| Large (≥900px) | 4 kolom | 32 | 960px |
 
 Navbar dibatasi 560px di tablet; form login dibatasi 480px.
 
@@ -280,7 +370,7 @@ Navbar dibatasi 560px di tablet; form login dibatasi 480px.
 
 File berikut **tidak** boleh di-commit (sudah ada di `.gitignore`):
 
-- `.env` (dan `.env.*`, kecuali `.env.example`)
+- `.env` (dan `.env.*`)
 - `android/key.properties`
 - `android/app/*.jks` / `*.keystore`
 
@@ -288,12 +378,18 @@ File berikut **tidak** boleh di-commit (sudah ada di `.gitignore`):
 
 ## Roadmap
 
-- [ ] Ganti login dummy dengan autentikasi asli (Supabase/Firebase Auth)
-- [ ] Routing dari kartu fitur ke halaman masing-masing
-- [ ] Implementasi 9 fitur utama + integrasi AI
-- [ ] Skema database Supabase + RLS
+- [x] Kasir teks + AiService (Gemini Interactions API) + AppSnackbar
+- [x] Migrasi Supabase: `products`, `product_images`, `sales` + storage + RLS dev
+- [x] ProductService + ProductRegisterScreen (foto multi-sudut)
+- [x] ProductScanScreen (visual match katalog + catat penjualan)
+- [x] ProductListScreen + routing kartu fitur (`feature_navigation.dart`)
+- [x] DashboardProvider + statistik beranda nyata
+- [ ] Generate Code 128 + scan barcode (`mobile_scanner`)
+- [ ] Pisah AI: suara jualan (singkat) vs daftar produk (lengkap)
+- [ ] Input suara (`speech_to_text`)
+- [ ] Ganti login dummy dengan Supabase Auth
+- [ ] Implementasi fitur 3–9 (konten, laporan AI, WhatsApp, dll.)
 - [ ] Mode offline & sinkronisasi
-- [ ] Data statistik beranda dari sumber nyata
 - [ ] Pengujian (unit/widget/integration)
 
 ---

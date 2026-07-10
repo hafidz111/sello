@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sello/core/constants/feature_data.dart';
+import 'package:sello/core/utils/feature_navigation.dart';
 import 'package:sello/core/utils/responsive.dart';
 import 'package:sello/providers/auth_provider.dart';
 import 'package:sello/styles/app_text_styles.dart';
@@ -50,7 +51,7 @@ class MenuScreen extends StatelessWidget {
                   delegate: SliverChildBuilderDelegate(
                     (context, index) => FeatureCard(
                       feature: FeatureData.all[index],
-                      onTap: () {},
+                      onTap: () => openFeature(context, FeatureData.all[index]),
                     ),
                     childCount: FeatureData.all.length,
                   ),
@@ -61,7 +62,7 @@ class MenuScreen extends StatelessWidget {
                   itemBuilder: (context, index) {
                     return FeatureCard(
                       feature: FeatureData.all[index],
-                      onTap: () {},
+                      onTap: () => openFeature(context, FeatureData.all[index]),
                     );
                   },
                 ),

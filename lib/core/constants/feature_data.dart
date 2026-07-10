@@ -17,7 +17,7 @@ abstract final class FeatureData {
       id: 'product_scan',
       title: 'Scan Produk',
       description:
-          'Scan/foto produk → AI kenali produknya, lalu isi jumlah (pcs) → penjualan tercatat.',
+          'Arahkan kamera ke produk → AI cocokkan katalog → atur jumlah → penjualan tercatat.',
       icon: Icons.qr_code_scanner_rounded,
       color: Color(0xFF7C3AED),
       route: '/product-scan',
@@ -61,7 +61,7 @@ abstract final class FeatureData {
     FeatureItem(
       id: 'digital_catalog',
       title: 'Katalog Digital',
-      description: 'Toko online mini yang bisa dibagikan lewat link/WhatsApp.',
+      description: 'Lihat daftar produk, stok, dan harga yang sudah terdaftar.',
       icon: Icons.storefront_rounded,
       color: Color(0xFF8B5CF6),
       route: '/catalog',

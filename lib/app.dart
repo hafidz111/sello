@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sello/core/constants/app_constants.dart';
 import 'package:sello/providers/auth_provider.dart';
+import 'package:sello/providers/dashboard_provider.dart';
 import 'package:sello/providers/navigation_provider.dart';
 import 'package:sello/screens/auth/login_screen.dart';
 import 'package:sello/screens/shell/main_shell.dart';
@@ -16,6 +17,7 @@ class SelloApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => NavigationProvider()),
+        ChangeNotifierProvider(create: (_) => DashboardProvider()),
       ],
       child: MaterialApp(
         title: AppConstants.appName,
@@ -27,12 +29,38 @@ class SelloApp extends StatelessWidget {
   }
 }
 
-class _AuthGate extends StatelessWidget {
+class _AuthGate extends StatefulWidget {
   const _AuthGate();
 
   @override
+  State<_AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<_AuthGate> {
+  @override
   Widget build(BuildContext context) {
     final isLoggedIn = context.watch<AuthProvider>().isLoggedIn;
-    return isLoggedIn ? const MainShell() : const LoginScreen();
+    return isLoggedIn ? const _LoggedInShell() : const LoginScreen();
   }
+}
+
+class _LoggedInShell extends StatefulWidget {
+  const _LoggedInShell();
+
+  @override
+  State<_LoggedInShell> createState() => _LoggedInShellState();
+}
+
+class _LoggedInShellState extends State<_LoggedInShell> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userId = context.read<AuthProvider>().userId;
+      context.read<DashboardProvider>().load(userId);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => const MainShell();
 }

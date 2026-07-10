@@ -31,8 +31,8 @@ class CashierResultArea extends StatelessWidget {
         color: AppColors.textHint,
         title: 'Belum ada catatan',
         message:
-            'Tulis penjualanmu di atas, lalu AI akan merapikannya jadi '
-            'daftar item, jumlah, dan harga.',
+            'Ketuk mikrofon untuk mencatat penjualan lewat suara, '
+            'atau pindah ke mode Scan untuk kenali produk dari kamera.',
       );
     }
 

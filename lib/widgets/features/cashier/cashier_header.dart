@@ -17,7 +17,7 @@ class CashierHeader extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
           ),
           child: const Icon(
-            Icons.mic_rounded,
+            Icons.point_of_sale_rounded,
             color: AppColors.textOnPrimary,
           ),
         ),
@@ -28,7 +28,7 @@ class CashierHeader extends StatelessWidget {
             children: [
               Text('Kasir Cerdas', style: AppTextStyles.titleLarge),
               Text(
-                'Tulis penjualan pakai bahasa sehari-hari',
+                'Catat penjualan lewat suara atau scan produk',
                 style: AppTextStyles.bodySmall,
               ),
             ],

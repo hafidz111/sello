@@ -1,12 +1,12 @@
 # Sello — Jualan Cerdas dengan AI
 
 Aplikasi mobile (Flutter) untuk membantu UMKM mengelola penjualan dengan bantuan AI:
-pencatatan kasir via suara/teks, scan produk, pembuatan konten dari foto produk, laporan
+pencatatan kasir via suara & scan produk, pembuatan konten dari foto produk, laporan
 bisnis berbahasa manusia, katalog digital, dan lainnya.
 
-> **Status proyek:** tahap awal. Kerangka aplikasi sudah jadi. **Kasir AI (teks)**, **daftar
-> produk dengan foto**, **scan visual + match katalog**, **katalog produk**, dan **statistik
-> beranda** sudah berjalan. Barcode/Code 128, suara, dan fitur 3–9 lainnya masih rencana.
+> **Status proyek:** tahap awal. Kerangka aplikasi sudah jadi. **Kasir Suara & Scan**
+> (satu layar), **daftar produk dengan foto**, **katalog produk**, dan **statistik beranda**
+> sudah berjalan. Barcode/Code 128 dan fitur lainnya masih rencana.
 > Lihat [Status Fitur](#status-fitur).
 
 ---
@@ -54,9 +54,11 @@ Alur aplikasi saat ini:
 1. **Daftar produk** (`ProductRegisterScreen`): nama, harga, stok, foto referensi
    (depan/samping/label) → disimpan ke Supabase (`products`, `product_images`, bucket
    `product-images`).
-2. **Scan penjualan** (`ProductScanScreen`): kamera live → AI `matchProductToCatalog` →
+2. **Scan penjualan** (tab Kasir, mode Scan): kamera live → AI `matchProductToCatalog` →
    jika confidence ≥ 65% produk terklaim otomatis → atur qty → `recordSale` (kurangi stok).
-3. **Katalog** (`ProductListScreen`): lihat produk terdaftar dari fitur Katalog Digital.
+3. **Kasir suara** (tab Kasir, mode Suara): ketuk mikrofon → ucapan natural → AI `extractSale`
+   → daftar item + total di layar yang sama.
+4. **Katalog** (`ProductListScreen`): lihat produk terdaftar dari fitur Katalog Digital.
 
 ### Rencana berikutnya (barcode & suara)
 
@@ -106,19 +108,18 @@ Legenda: **Selesai** · **Sebagian** · **Belum**
 | SafeArea global | Selesai | Diterapkan di seluruh layar. |
 | Responsivitas tablet | Selesai | Breakpoint & layout menyesuaikan lebar layar. |
 
-### Fitur Utama (Bisnis) — 9 Fitur
+### Fitur Utama (Bisnis) — 8 Fitur
 
 | # | Fitur | Status | Keterangan |
 |---|-------|:------:|------------|
-| 1 | Kasir Suara & Teks | Sebagian | Tab Kasir: input teks → Gemini ekstrak item/qty/harga. Suara belum. |
-| 2 | Scan Produk | Sebagian | Kamera → AI match katalog → catat penjualan. Barcode/Code 128 belum. |
-| 3 | Foto ke Konten | Belum | Placeholder. Upload foto & generator caption. |
-| 4 | Asisten WhatsApp | Belum | Belum ada halaman & integrasi WhatsApp Business API. |
-| 5 | Laporan Bisnis | Belum | Placeholder. Agregasi data & ringkasan AI. |
-| 6 | Terjemah & Ekspor | Belum | Belum ada halaman & mesin terjemahan. |
-| 7 | Katalog Digital | Sebagian | Daftar produk terdaftar (`ProductListScreen`). Link share belum. |
-| 8 | Mode Offline | Belum | Belum ada penyimpanan lokal & sinkronisasi. |
-| 9 | Edukasi Mikro | Belum | Belum ada halaman & tips berbasis data. |
+| 1 | Kasir Suara & Scan | Sebagian | Satu tab Kasir: mode Suara (`speech_to_text` + Gemini) dan mode Scan (kamera + match katalog). Tanpa input teks. Barcode belum. |
+| 2 | Foto ke Konten | Belum | Placeholder. Upload foto & generator caption. |
+| 3 | Asisten WhatsApp | Belum | Belum ada halaman & integrasi WhatsApp Business API. |
+| 4 | Laporan Bisnis | Belum | Placeholder. Agregasi data & ringkasan AI. |
+| 5 | Terjemah & Ekspor | Belum | Belum ada halaman & mesin terjemahan. |
+| 6 | Katalog Digital | Sebagian | Daftar produk terdaftar (`ProductListScreen`). Link share belum. |
+| 7 | Mode Offline | Belum | Belum ada penyimpanan lokal & sinkronisasi. |
+| 8 | Edukasi Mikro | Belum | Belum ada halaman & tips berbasis data. |
 
 ### Backend & Integrasi
 
@@ -127,7 +128,7 @@ Legenda: **Selesai** · **Sebagian** · **Belum**
 | Supabase | Sebagian | Tabel produk, gambar, penjualan via migrasi GitHub. Auth belum. |
 | Firebase | Sebagian | Dependency & `firebase_options.dart` ada. Belum di-init di `main.dart`. |
 | Autentikasi asli | Belum | Masih dummy (`userId` dari email). Belum Supabase Auth. |
-| Layanan AI (Gemini) | Sebagian | `extractSale`, `matchProductToCatalog` berjalan. Suara belum. |
+| Layanan AI (Gemini) | Sebagian | `extractSale`, `matchProductToCatalog` berjalan. Input suara via `speech_to_text`. |
 
 ---
 
@@ -137,12 +138,12 @@ Legenda: **Selesai** · **Sebagian** · **Belum**
 - **Provider** — state management
 - **dio** — HTTP client terpusat (`DioClient`, `GeminiApiService`)
 - **supabase_flutter** — produk, gambar, penjualan, storage
-- **camera**, **image_picker**, **permission_handler** — scan & daftar produk
+- **camera**, **image_picker**, **permission_handler**, **speech_to_text** — scan, daftar produk, kasir suara
 - **firebase_core / firebase_auth** — terpasang, belum diaktifkan
 - **flutter_dotenv** — konfigurasi environment via `.env`
 - **flutter_lints** — aturan linting
 
-Package rencana: `mobile_scanner`, `barcode_widget`, `speech_to_text`.
+Package rencana: `mobile_scanner`, `barcode_widget`.
 
 ---
 
@@ -163,7 +164,7 @@ lib/
 │   │   └── network_exception.dart
 │   ├── constants/
 │   │   ├── app_constants.dart
-│   │   ├── feature_data.dart     # Daftar 9 fitur (id & route Bahasa Inggris)
+│   │   ├── feature_data.dart     # Daftar 8 fitur (id & route Bahasa Inggris)
 │   │   └── gemini_schemas.dart   # JSON schema untuk respons AI terstruktur
 │   └── utils/
 │       ├── responsive.dart
@@ -276,7 +277,7 @@ flutter run
 ```
 
 Login masih **dummy**: email & password apa saja (asal tidak kosong).
-Tab **Kasir** dan **Scan Produk** membutuhkan `GEMINI_API_KEY` di `.env`.
+Tab **Kasir** membutuhkan `GEMINI_API_KEY` di `.env`. Mode suara butuh izin mikrofon; mode scan butuh izin kamera.
 
 ### Database Supabase
 
@@ -312,7 +313,7 @@ Panduan lengkap: [`.context/PLAYSTORE.md`](.context/PLAYSTORE.md).
 | Provider | Fungsi |
 |----------|--------|
 | `AuthProvider` | Status login (dummy), `userId`, `userName`, `login()`, `logout()` |
-| `NavigationProvider` | Index tab bottom navigation aktif |
+| `NavigationProvider` | Index tab bottom navigation aktif; `openCashier(mode)` untuk buka kasir dengan mode suara/scan |
 | `DashboardProvider` | Statistik penjualan & transaksi dari Supabase |
 
 Logout: `NavigationProvider.setIndex(0)` lalu `AuthProvider.logout()`.
@@ -378,17 +379,17 @@ File berikut **tidak** boleh di-commit (sudah ada di `.gitignore`):
 
 ## Roadmap
 
-- [x] Kasir teks + AiService (Gemini Interactions API) + AppSnackbar
+- [x] Kasir suara + scan (satu layar) + AiService (Gemini) + AppSnackbar
 - [x] Migrasi Supabase: `products`, `product_images`, `sales` + storage + RLS dev
 - [x] ProductService + ProductRegisterScreen (foto multi-sudut)
-- [x] ProductScanScreen (visual match katalog + catat penjualan)
+- [x] ProductScanScreen (legacy; logika scan dipakai di tab Kasir mode Scan)
 - [x] ProductListScreen + routing kartu fitur (`feature_navigation.dart`)
 - [x] DashboardProvider + statistik beranda nyata
 - [ ] Generate Code 128 + scan barcode (`mobile_scanner`)
 - [ ] Pisah AI: suara jualan (singkat) vs daftar produk (lengkap)
-- [ ] Input suara (`speech_to_text`)
+- [x] Input suara (`speech_to_text`)
 - [ ] Ganti login dummy dengan Supabase Auth
-- [ ] Implementasi fitur 3–9 (konten, laporan AI, WhatsApp, dll.)
+- [ ] Implementasi fitur konten, laporan AI, WhatsApp, dll.
 - [ ] Mode offline & sinkronisasi
 - [ ] Pengujian (unit/widget/integration)
 

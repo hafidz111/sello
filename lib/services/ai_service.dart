@@ -160,7 +160,7 @@ class AiService {
 
     if (result.isEmpty) {
       throw const AiException(
-        'Tidak ada item yang bisa dikenali. Coba tulis lebih jelas, '
+        'Tidak ada item yang bisa dikenali. Coba ucapkan lebih jelas, '
         'mis. "jual 3 kopi 5 ribu".',
       );
     }

@@ -22,8 +22,8 @@ class MainShell extends StatelessWidget {
     ),
     NavItem(
       label: 'Kasir',
-      icon: Icons.mic_none_rounded,
-      activeIcon: Icons.mic_rounded,
+      icon: Icons.point_of_sale_outlined,
+      activeIcon: Icons.point_of_sale_rounded,
     ),
     NavItem(
       label: 'Konten',

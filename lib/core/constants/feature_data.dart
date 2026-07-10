@@ -5,22 +5,13 @@ import 'package:sello/styles/app_colors.dart';
 abstract final class FeatureData {
   static const List<FeatureItem> all = [
     FeatureItem(
-      id: 'voice_cashier',
-      title: 'Kasir Suara & Teks',
+      id: 'cashier',
+      title: 'Kasir Suara & Scan',
       description:
-          'Catat penjualan dengan kalimat natural. AI ekstrak item, harga, stok otomatis.',
-      icon: Icons.mic_rounded,
+          'Catat penjualan lewat suara atau scan produk dengan kamera. AI rapikan otomatis.',
+      icon: Icons.point_of_sale_rounded,
       color: AppColors.primary,
       route: '/cashier',
-    ),
-    FeatureItem(
-      id: 'product_scan',
-      title: 'Scan Produk',
-      description:
-          'Arahkan kamera ke produk → AI cocokkan katalog → atur jumlah → penjualan tercatat.',
-      icon: Icons.qr_code_scanner_rounded,
-      color: Color(0xFF7C3AED),
-      route: '/product-scan',
     ),
     FeatureItem(
       id: 'photo_to_content',

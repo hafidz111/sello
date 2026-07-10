@@ -1,0 +1,17 @@
+# Jalankan migrasi lewat Supabase GitHub Integration atau CLI: supabase db push
+# https://supabase.com/docs/guides/deployment/database-migrations
+
+[project]
+id = "sello"
+
+[api]
+enabled = true
+
+[db]
+major_version = 15
+
+[db.migrations]
+enabled = true
+
+[storage]
+enabled = true

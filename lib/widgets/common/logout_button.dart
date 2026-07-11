@@ -37,7 +37,7 @@ class LogoutButton extends StatelessWidget {
 
     if (confirmed == true && context.mounted) {
       context.read<NavigationProvider>().setIndex(0);
-      context.read<AuthProvider>().logout();
+      await context.read<AuthProvider>().logout();
     }
   }
 

@@ -4,7 +4,7 @@ import 'package:sello/core/constants/app_constants.dart';
 import 'package:sello/providers/auth_provider.dart';
 import 'package:sello/providers/dashboard_provider.dart';
 import 'package:sello/providers/navigation_provider.dart';
-import 'package:sello/screens/auth/login_screen.dart';
+import 'package:sello/screens/auth/auth_shell.dart';
 import 'package:sello/screens/shell/main_shell.dart';
 import 'package:sello/styles/app_theme.dart';
 
@@ -39,8 +39,15 @@ class _AuthGate extends StatefulWidget {
 class _AuthGateState extends State<_AuthGate> {
   @override
   Widget build(BuildContext context) {
-    final isLoggedIn = context.watch<AuthProvider>().isLoggedIn;
-    return isLoggedIn ? const _LoggedInShell() : const LoginScreen();
+    final auth = context.watch<AuthProvider>();
+
+    if (!auth.isInitialized) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return auth.isLoggedIn ? const _LoggedInShell() : const AuthShell();
   }
 }
 

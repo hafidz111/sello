@@ -37,6 +37,7 @@ class ProductService {
 
   static const _bucket = 'product-images';
   static const _matchConfidenceThreshold = 0.65;
+  static const _signedUrlSeconds = 3600;
 
   SupabaseClient get _client => SupabaseConfig.client;
 
@@ -55,9 +56,13 @@ class ProductService {
           .map(Product.fromJson)
           .toList();
 
-      return products
-          .map((product) => product.copyWith(images: _withPublicUrls(product)))
-          .toList();
+      final withUrls = <Product>[];
+      for (final product in products) {
+        withUrls.add(
+          product.copyWith(images: await _withSignedUrls(product)),
+        );
+      }
+      return withUrls;
     } on PostgrestException catch (e) {
       throw ProductException(_mapDbError(e));
     } catch (_) {
@@ -131,7 +136,7 @@ class ProductService {
           .single();
 
       final product = Product.fromJson(full);
-      return product.copyWith(images: _withPublicUrls(product));
+      return product.copyWith(images: await _withSignedUrls(product));
     } on StorageException {
       throw const ProductException(
         'Gagal mengunggah foto produk. Pastikan bucket product-images sudah dibuat di Supabase.',
@@ -223,27 +228,40 @@ class ProductService {
     }
   }
 
-  List<ProductImage> _withPublicUrls(Product product) {
-    return product.images
-        .map(
-          (image) => ProductImage(
-            id: image.id,
-            productId: image.productId,
-            storagePath: image.storagePath,
-            angleLabel: image.angleLabel,
-            sortOrder: image.sortOrder,
-            publicUrl: _client.storage
-                .from(_bucket)
-                .getPublicUrl(image.storagePath),
-          ),
-        )
-        .toList();
+  Future<List<ProductImage>> _withSignedUrls(Product product) async {
+    final images = <ProductImage>[];
+    for (final image in product.images) {
+      String? url;
+      try {
+        url = await _client.storage
+            .from(_bucket)
+            .createSignedUrl(image.storagePath, _signedUrlSeconds);
+      } on StorageException {
+        url = null;
+      }
+
+      images.add(
+        ProductImage(
+          id: image.id,
+          productId: image.productId,
+          storagePath: image.storagePath,
+          angleLabel: image.angleLabel,
+          sortOrder: image.sortOrder,
+          publicUrl: url,
+        ),
+      );
+    }
+    return images;
   }
 
   String _mapDbError(PostgrestException error) {
     final msg = error.message.toLowerCase();
     if (msg.contains('relation') && msg.contains('does not exist')) {
       return 'Tabel database belum dibuat. Push migrasi supabase/migrations/ ke GitHub.';
+    }
+    if (msg.contains('row-level security') || msg.contains('rls')) {
+      return 'Akses data ditolak. Pastikan kamu sudah masuk dan '
+          'integrasi Firebase Auth di Supabase sudah diaktifkan.';
     }
     return 'Terjadi kesalahan database. Coba lagi nanti.';
   }

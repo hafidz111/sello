@@ -99,7 +99,7 @@ Legenda: **Selesai** · **Sebagian** · **Belum**
 
 | Fitur | Status | Keterangan |
 |-------|:------:|------------|
-| Halaman Login | Sebagian | Dummy, menerima email & password apa saja. Belum auth asli. |
+| Halaman Login | Selesai | Firebase Auth (email/password). Register & lupa password tersedia. |
 | Halaman Beranda | Selesai | Statistik penjualan & transaksi dari Supabase (`DashboardProvider`). |
 | Floating bottom navbar | Selesai | 5 tab, animasi aktif, responsif tablet. |
 | Halaman Menu | Selesai | Daftar semua fitur + tombol logout. |
@@ -125,9 +125,9 @@ Legenda: **Selesai** · **Sebagian** · **Belum**
 
 | Komponen | Status | Keterangan |
 |----------|:------:|------------|
-| Supabase | Sebagian | Tabel produk, gambar, penjualan via migrasi GitHub. Auth belum. |
-| Firebase | Sebagian | Dependency & `firebase_options.dart` ada. Belum di-init di `main.dart`. |
-| Autentikasi asli | Belum | Masih dummy (`userId` dari email). Belum Supabase Auth. |
+| Supabase | Sebagian | Tabel produk, gambar, penjualan + RLS per-user (Firebase UID). Bucket gambar privat. |
+| Firebase | Selesai | `Firebase.initializeApp` + Auth (login/register/reset). JWT diteruskan ke Supabase. |
+| Autentikasi asli | Selesai | Firebase Auth. `userId` = Firebase UID. |
 | Layanan AI (Gemini) | Sebagian | `extractSale`, `matchProductToCatalog` berjalan. Input suara via `speech_to_text`. |
 
 ---
@@ -139,7 +139,7 @@ Legenda: **Selesai** · **Sebagian** · **Belum**
 - **dio** — HTTP client terpusat (`DioClient`, `GeminiApiService`)
 - **supabase_flutter** — produk, gambar, penjualan, storage
 - **camera**, **image_picker**, **permission_handler**, **speech_to_text** — scan, daftar produk, kasir suara
-- **firebase_core / firebase_auth** — terpasang, belum diaktifkan
+- **firebase_core / firebase_auth** — login, register, reset password; JWT ke Supabase RLS
 - **flutter_dotenv** — konfigurasi environment via `.env`
 - **flutter_lints** — aturan linting
 
@@ -151,14 +151,14 @@ Package rencana: `mobile_scanner`, `barcode_widget`.
 
 ```
 lib/
-├── main.dart                     # Entry: load .env → init Supabase → runApp
+├── main.dart                     # Entry: load .env → Firebase → Supabase → runApp
 ├── app.dart                      # MultiProvider + MaterialApp + AuthGate
-├── firebase_options.dart         # Konfigurasi Firebase (belum dipakai)
+├── firebase_options.dart         # Konfigurasi Firebase
 │
 ├── core/
 │   ├── config/
 │   │   ├── env.dart              # Env.supabaseUrl, geminiApiKey, geminiModel, dll
-│   │   └── supabase_config.dart  # SupabaseConfig.initialize() + .client
+│   │   └── supabase_config.dart  # Supabase + accessToken Firebase JWT
 │   ├── network/
 │   │   ├── dio_client.dart       # Dio terpusat (Gemini + REST custom)
 │   │   └── network_exception.dart
@@ -258,14 +258,17 @@ File ini **tidak** ikut di-commit (sudah masuk `.gitignore`).
 
 ## Firebase
 
-- File konfigurasi Firebase karena mengandung API key.
-- Generate dengan FlutterFire CLI:
+- File konfigurasi: `lib/firebase_options.dart` (di-generate FlutterFire CLI).
+- Diinit di `main.dart` sebelum Supabase.
+- Auth dipakai di `AuthProvider` (email/password).
+- JWT Firebase dikirim ke Supabase (`accessToken`) agar RLS memakai `auth.uid()`.
+- Di Dashboard Supabase: aktifkan **Third-party Auth → Firebase** dengan Project ID `sello-62633`.
+  Detail: [`supabase/README.md`](supabase/README.md).
+- Regenerate opsi platform:
   ```bash
   dart pub global activate flutterfire_cli
   flutterfire configure
   ```
-- **Belum diinisialisasi** di `main.dart` dan belum dipakai fitur apa pun.
-- Aktivasi nanti: `await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);`
 
 ---
 
@@ -276,8 +279,11 @@ flutter pub get
 flutter run
 ```
 
-Login masih **dummy**: email & password apa saja (asal tidak kosong).
+Login memakai **Firebase Auth** (email & password).
 Tab **Kasir** membutuhkan `GEMINI_API_KEY` di `.env`. Mode suara butuh izin mikrofon; mode scan butuh izin kamera.
+
+Setelah migrasi RLS per-user diterapkan, pastikan integrasi Firebase di Supabase Dashboard sudah aktif
+(lihat [Database Supabase](#database-supabase) dan `supabase/README.md`).
 
 ### Database Supabase
 
@@ -312,7 +318,7 @@ Panduan lengkap: [`.context/PLAYSTORE.md`](.context/PLAYSTORE.md).
 
 | Provider | Fungsi |
 |----------|--------|
-| `AuthProvider` | Status login (dummy), `userId`, `userName`, `login()`, `logout()` |
+| `AuthProvider` | Firebase Auth: login/register/reset/logout, `userId` = Firebase UID |
 | `NavigationProvider` | Index tab bottom navigation aktif; `openCashier(mode)` untuk buka kasir dengan mode suara/scan |
 | `DashboardProvider` | Statistik penjualan & transaksi dari Supabase |
 
@@ -380,7 +386,7 @@ File berikut **tidak** boleh di-commit (sudah ada di `.gitignore`):
 ## Roadmap
 
 - [x] Kasir suara + scan (satu layar) + AiService (Gemini) + AppSnackbar
-- [x] Migrasi Supabase: `products`, `product_images`, `sales` + storage + RLS dev
+- [x] Migrasi Supabase: `products`, `product_images`, `sales` + storage + RLS per-user (Firebase)
 - [x] ProductService + ProductRegisterScreen (foto multi-sudut)
 - [x] ProductScanScreen (legacy; logika scan dipakai di tab Kasir mode Scan)
 - [x] ProductListScreen + routing kartu fitur (`feature_navigation.dart`)
@@ -388,7 +394,7 @@ File berikut **tidak** boleh di-commit (sudah ada di `.gitignore`):
 - [ ] Generate Code 128 + scan barcode (`mobile_scanner`)
 - [ ] Pisah AI: suara jualan (singkat) vs daftar produk (lengkap)
 - [x] Input suara (`speech_to_text`)
-- [ ] Ganti login dummy dengan Supabase Auth
+- [x] Auth Firebase + JWT ke Supabase RLS
 - [ ] Implementasi fitur konten, laporan AI, WhatsApp, dll.
 - [ ] Mode offline & sinkronisasi
 - [ ] Pengujian (unit/widget/integration)

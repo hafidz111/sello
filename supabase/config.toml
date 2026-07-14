@@ -15,3 +15,9 @@ enabled = true
 
 [storage]
 enabled = true
+
+# Firebase Auth as third-party provider (must also enable in Dashboard).
+# Project ID from Firebase Console / firebase_options.dart
+[auth.third_party.firebase]
+enabled = true
+project_id = "sello-62633"

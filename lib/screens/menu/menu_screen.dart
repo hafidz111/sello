@@ -4,6 +4,7 @@ import 'package:sello/core/utils/responsive.dart';
 import 'package:sello/providers/auth_provider.dart';
 import 'package:sello/screens/features/education_screen.dart';
 import 'package:sello/screens/features/product_list_screen.dart';
+import 'package:sello/screens/features/translate_export_screen.dart';
 import 'package:sello/styles/app_colors.dart';
 import 'package:sello/styles/app_text_styles.dart';
 import 'package:sello/widgets/common/app_snackbar.dart';
@@ -21,6 +22,12 @@ class MenuScreen extends StatelessWidget {
   Future<void> _openEducation(BuildContext context) {
     return Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const EducationScreen()),
+    );
+  }
+
+  Future<void> _openTranslateExport(BuildContext context) {
+    return Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const TranslateExportScreen()),
     );
   }
 
@@ -63,6 +70,13 @@ class MenuScreen extends StatelessWidget {
                   subtitle:
                       'Katalog, tambah produk, stok, dan harga dalam satu tempat',
                   onTap: () => _openProducts(context),
+                ),
+                _MenuTile(
+                  icon: Icons.translate_rounded,
+                  color: const Color(0xFF06B6D4),
+                  title: 'Terjemah & Ekspor',
+                  subtitle: 'Deskripsi produk ID, EN, AR, ZH siap marketplace',
+                  onTap: () => _openTranslateExport(context),
                 ),
               ],
             ),

@@ -116,7 +116,7 @@ Legenda: **Selesai** · **Sebagian** · **Belum**
 | 2 | Foto ke Konten | Belum | Placeholder. Upload foto & generator caption. |
 | 3 | Asisten WhatsApp | Belum | Belum ada halaman & integrasi WhatsApp Business API. |
 | 4 | Laporan Bisnis | Selesai | Filter periode + rentang tanggal; penjualan/laba/transaksi/item; produk & pelanggan; laporan AI. |
-| 5 | Terjemah & Ekspor | Belum | Belum ada halaman & mesin terjemahan. |
+| 5 | Terjemah & Ekspor | Selesai | Terjemah deskripsi produk ID/EN/AR/ZH + ekspor JSON/teks skema `sello.product_i18n`. |
 | 6 | Katalog Digital | Sebagian | Daftar produk terdaftar (`ProductListScreen`). Link share belum. |
 | 7 | Mode Offline | Belum | Belum ada penyimpanan lokal & sinkronisasi. |
 | 8 | Edukasi Mikro | Selesai | Tips AI dari penjualan 30 hari terakhir (Menu / kartu fitur). |

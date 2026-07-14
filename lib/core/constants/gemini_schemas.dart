@@ -156,4 +156,59 @@ abstract final class GeminiSchemas {
     },
     'required': ['headline', 'tips'],
   };
+
+  static const productTranslation = {
+    'type': 'OBJECT',
+    'properties': {
+      'id': {
+        'type': 'OBJECT',
+        'properties': {
+          'title': {'type': 'STRING'},
+          'description': {'type': 'STRING'},
+          'tags': {
+            'type': 'ARRAY',
+            'items': {'type': 'STRING'},
+          },
+        },
+        'required': ['title', 'description', 'tags'],
+      },
+      'en': {
+        'type': 'OBJECT',
+        'properties': {
+          'title': {'type': 'STRING'},
+          'description': {'type': 'STRING'},
+          'tags': {
+            'type': 'ARRAY',
+            'items': {'type': 'STRING'},
+          },
+        },
+        'required': ['title', 'description', 'tags'],
+      },
+      'ar': {
+        'type': 'OBJECT',
+        'properties': {
+          'title': {'type': 'STRING'},
+          'description': {'type': 'STRING'},
+          'tags': {
+            'type': 'ARRAY',
+            'items': {'type': 'STRING'},
+          },
+        },
+        'required': ['title', 'description', 'tags'],
+      },
+      'zh': {
+        'type': 'OBJECT',
+        'properties': {
+          'title': {'type': 'STRING'},
+          'description': {'type': 'STRING'},
+          'tags': {
+            'type': 'ARRAY',
+            'items': {'type': 'STRING'},
+          },
+        },
+        'required': ['title', 'description', 'tags'],
+      },
+    },
+    'required': ['id', 'en', 'ar', 'zh'],
+  };
 }

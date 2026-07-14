@@ -6,10 +6,12 @@ import 'package:sello/core/constants/gemini_schemas.dart';
 import 'package:sello/core/network/network_exception.dart';
 import 'package:sello/core/utils/catalog_fuzzy_matcher.dart';
 import 'package:sello/models/education_guide.dart';
+import 'package:sello/models/export_language.dart';
 import 'package:sello/models/product.dart';
 import 'package:sello/models/product_detection.dart';
 import 'package:sello/models/product_draft.dart';
 import 'package:sello/models/product_match_result.dart';
+import 'package:sello/models/product_translation_bundle.dart';
 import 'package:sello/models/sale_item.dart';
 import 'package:sello/services/gemini_api_service.dart';
 
@@ -173,6 +175,40 @@ class AiService {
     );
 
     return _parseEducationGuide(raw);
+  }
+
+  Future<Map<ExportLanguage, LocalizedProductCopy>> translateProductCopy({
+    required String productName,
+    required int priceIdr,
+    required int stock,
+    String sourceNotes = '',
+  }) async {
+    _ensureConfigured();
+
+    final notes = sourceNotes.trim().isEmpty
+        ? '(tidak ada catatan tambahan)'
+        : sourceNotes.trim();
+
+    final raw = await _callGemini(
+      () => _geminiApi.createTextInteraction(
+        input:
+            'Nama produk (ID): $productName\n'
+            'Harga jual (IDR): $priceIdr\n'
+            'Stok: $stock\n'
+            'Catatan penjual (ID): $notes',
+        systemInstruction:
+            'Kamu copywriter marketplace untuk UMKM Indonesia di aplikasi Sello. '
+            'Buat judul, deskripsi, dan tag produk dalam 4 bahasa: '
+            'id (Indonesia), en (English), ar (العربية), zh (简体中文). '
+            'Deskripsi 2–4 kalimat, persuasif tapi jujur. '
+            'Jangan mengarang spesifikasi yang tidak disebut. '
+            'Tag 3–6 kata singkat tanpa tanda #. '
+            'Untuk ar gunakan Arab yang natural. Untuk zh gunakan Mandarin ringkas.',
+        schema: GeminiSchemas.productTranslation,
+      ),
+    );
+
+    return _parseProductTranslation(raw);
   }
 
   Future<ProductDetection> detectProduct(Uint8List imageBytes) async {
@@ -433,6 +469,40 @@ class AiService {
       tips: tips.take(3).toList(),
       generatedAt: DateTime.now(),
     );
+  }
+
+  Map<ExportLanguage, LocalizedProductCopy> _parseProductTranslation(String raw) {
+    final Object? decoded;
+    try {
+      decoded = jsonDecode(raw);
+    } catch (_) {
+      throw const AiException('Format jawaban AI tidak dapat dibaca.');
+    }
+
+    if (decoded is! Map<String, dynamic>) {
+      throw const AiException('AI tidak mengembalikan hasil terjemahan.');
+    }
+
+    final result = <ExportLanguage, LocalizedProductCopy>{};
+    for (final language in ExportLanguage.values) {
+      final localeRaw = decoded[language.code];
+      if (localeRaw is! Map<String, dynamic>) {
+        throw const AiException(
+          'Hasil terjemahan belum lengkap untuk semua bahasa.',
+        );
+      }
+      final copy = LocalizedProductCopy.fromJson(
+        localeRaw,
+        language: language,
+      );
+      if (copy.title.isEmpty || copy.description.isEmpty) {
+        throw const AiException(
+          'Judul atau deskripsi terjemahan masih kosong. Coba lagi.',
+        );
+      }
+      result[language] = copy;
+    }
+    return result;
   }
 
   ProductMatchResult _parseProductMatch(String raw, List<Product> catalog) {

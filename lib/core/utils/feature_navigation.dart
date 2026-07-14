@@ -7,6 +7,7 @@ import 'package:sello/providers/dashboard_provider.dart';
 import 'package:sello/providers/navigation_provider.dart';
 import 'package:sello/screens/features/education_screen.dart';
 import 'package:sello/screens/features/product_list_screen.dart';
+import 'package:sello/screens/features/translate_export_screen.dart';
 import 'package:sello/widgets/common/app_snackbar.dart';
 
 Future<void> openFeature(BuildContext context, FeatureItem feature) async {
@@ -42,6 +43,11 @@ Future<void> openFeature(BuildContext context, FeatureItem feature) async {
       await Navigator.of(
         context,
       ).push(MaterialPageRoute(builder: (_) => const EducationScreen()));
+      return;
+    case 'translate_export':
+      await Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const TranslateExportScreen()),
+      );
       return;
     default:
       AppSnackbar.info(context, '${feature.title} segera hadir.');

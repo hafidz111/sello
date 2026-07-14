@@ -115,7 +115,7 @@ Legenda: **Selesai** · **Sebagian** · **Belum**
 | 1 | Kasir Suara & Scan | Sebagian | Satu tab Kasir: mode Suara (`speech_to_text` + Gemini) dan mode Scan (kamera + match katalog). Tanpa input teks. Barcode belum. |
 | 2 | Foto ke Konten | Belum | Placeholder. Upload foto & generator caption. |
 | 3 | Asisten WhatsApp | Belum | Belum ada halaman & integrasi WhatsApp Business API. |
-| 4 | Laporan Bisnis | Belum | Placeholder. Agregasi data & ringkasan AI. |
+| 4 | Laporan Bisnis | Selesai | Filter periode + rentang tanggal; penjualan/laba/transaksi/item; produk & pelanggan; laporan AI. |
 | 5 | Terjemah & Ekspor | Belum | Belum ada halaman & mesin terjemahan. |
 | 6 | Katalog Digital | Sebagian | Daftar produk terdaftar (`ProductListScreen`). Link share belum. |
 | 7 | Mode Offline | Belum | Belum ada penyimpanan lokal & sinkronisasi. |
@@ -178,17 +178,22 @@ lib/
 │   ├── product.dart
 │   ├── product_image.dart
 │   ├── product_match_result.dart
-│   └── dashboard_stats.dart
+│   ├── dashboard_stats.dart
+│   ├── report_period.dart
+│   ├── business_report.dart
+│   └── product_sales_summary.dart
 │
 ├── providers/
 │   ├── auth_provider.dart
 │   ├── navigation_provider.dart
-│   └── dashboard_provider.dart
+│   ├── dashboard_provider.dart
+│   └── report_provider.dart
 │
 ├── services/
 │   ├── ai_service.dart           # Logika bisnis AI
 │   ├── gemini_api_service.dart   # HTTP Gemini via Dio
-│   └── product_service.dart
+│   ├── product_service.dart
+│   └── report_service.dart       # Agregasi laporan penjualan
 │
 ├── screens/
 │   ├── auth/login_screen.dart
@@ -214,7 +219,8 @@ lib/
     │   ├── app_safe_area.dart
     │   ├── app_snackbar.dart
     │   └── ...
-    └── features/                 # UI per fitur (wajib dipisah dari screen)
+    └── features/
+        ├── report/               # UI laporan bisnis
         └── <feature_name>/
             └── <widget_name>.dart
 ```
@@ -321,6 +327,7 @@ Panduan lengkap: [`.context/PLAYSTORE.md`](.context/PLAYSTORE.md).
 | `AuthProvider` | Firebase Auth: login/register/reset/logout, `userId` = Firebase UID |
 | `NavigationProvider` | Index tab bottom navigation aktif; `openCashier(mode)` untuk buka kasir dengan mode suara/scan |
 | `DashboardProvider` | Statistik penjualan & transaksi dari Supabase |
+| `ReportProvider` | Laporan bisnis per periode (harian–tahunan) |
 
 Logout: `NavigationProvider.setIndex(0)` lalu `AuthProvider.logout()`.
 
@@ -395,7 +402,8 @@ File berikut **tidak** boleh di-commit (sudah ada di `.gitignore`):
 - [ ] Pisah AI: suara jualan (singkat) vs daftar produk (lengkap)
 - [x] Input suara (`speech_to_text`)
 - [x] Auth Firebase + JWT ke Supabase RLS
-- [ ] Implementasi fitur konten, laporan AI, WhatsApp, dll.
+- [x] Laporan Bisnis: agregasi harian/mingguan/bulanan/tahunan + insight
+- [ ] Implementasi fitur konten, WhatsApp, dll.
 - [ ] Mode offline & sinkronisasi
 - [ ] Pengujian (unit/widget/integration)
 

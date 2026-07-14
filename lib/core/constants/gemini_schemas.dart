@@ -80,4 +80,18 @@ abstract final class GeminiSchemas {
       'is_matched',
     ],
   };
+
+  static const businessInsight = {
+    'type': 'OBJECT',
+    'properties': {
+      'summary': {
+        'type': 'STRING',
+        'description':
+            'Laporan AI 3–5 kalimat Bahasa Indonesia yang membacakan '
+            'penjualan, laba, produk terlaris, dan pelanggan utama. '
+            'Mudah dipahami pedagang UMKM. Hindari jargon teknis.',
+      },
+    },
+    'required': ['summary'],
+  };
 }

@@ -6,6 +6,7 @@ class Product {
     required this.userId,
     required this.name,
     required this.price,
+    required this.costPrice,
     required this.stock,
     this.images = const [],
   });
@@ -14,6 +15,7 @@ class Product {
   final String userId;
   final String name;
   final int price;
+  final int costPrice;
   final int stock;
   final List<ProductImage> images;
 
@@ -32,6 +34,7 @@ class Product {
       userId: json['user_id'] as String,
       name: json['name'] as String,
       price: (json['price'] as num).toInt(),
+      costPrice: (json['cost_price'] as num?)?.toInt() ?? 0,
       stock: (json['stock'] as num).toInt(),
       images: images,
     );
@@ -43,6 +46,7 @@ class Product {
       userId: userId,
       name: name,
       price: price,
+      costPrice: costPrice,
       stock: stock ?? this.stock,
       images: images ?? this.images,
     );

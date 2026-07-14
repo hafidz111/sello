@@ -35,7 +35,7 @@ abstract final class FeatureData {
       id: 'business_report',
       title: 'Laporan Bisnis',
       description:
-          'Ringkasan harian/mingguan dalam bahasa manusia yang mudah dipahami.',
+          'Filter hari/minggu/bulan/tahun + rentang tanggal. Lihat penjualan, laba, produk & pelanggan, plus laporan AI.',
       icon: Icons.analytics_rounded,
       color: Color(0xFFF59E0B),
       route: '/report',

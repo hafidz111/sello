@@ -11,6 +11,7 @@ class RegisterFormBody extends StatelessWidget {
     super.key,
     required this.nameController,
     required this.priceController,
+    required this.costController,
     required this.stockController,
     required this.photos,
     required this.isSaving,
@@ -20,6 +21,7 @@ class RegisterFormBody extends StatelessWidget {
 
   final TextEditingController nameController;
   final TextEditingController priceController;
+  final TextEditingController costController;
   final TextEditingController stockController;
   final Map<String, Uint8List> photos;
   final bool isSaving;
@@ -44,7 +46,13 @@ class RegisterFormBody extends StatelessWidget {
         TextField(
           controller: priceController,
           keyboardType: TextInputType.number,
-          decoration: _inputDecoration('Harga satuan (Rp)', '10000'),
+          decoration: _inputDecoration('Harga jual (Rp)', '10000'),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: costController,
+          keyboardType: TextInputType.number,
+          decoration: _inputDecoration('Harga modal / HPP (Rp)', '7000'),
         ),
         const SizedBox(height: 12),
         TextField(

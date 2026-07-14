@@ -118,6 +118,49 @@ class AiService {
     return _parseProductMatch(raw, catalog);
   }
 
+  Future<String> summarizeBusinessReport({
+    required String periodLabel,
+    required int totalRevenue,
+    required int totalProfit,
+    required int transactionCount,
+    required int unitsSold,
+    required List<String> topProducts,
+    required List<String> topCustomers,
+  }) async {
+    _ensureConfigured();
+
+    final topProductLines = topProducts.isEmpty
+        ? '- (tidak ada)'
+        : topProducts.map((line) => '- $line').join('\n');
+    final topCustomerLines = topCustomers.isEmpty
+        ? '- (tidak ada)'
+        : topCustomers.map((line) => '- $line').join('\n');
+
+    final raw = await _callGemini(
+      () => _geminiApi.createTextInteraction(
+        input:
+            'Periode: $periodLabel\n'
+            'Penjualan (Rp): $totalRevenue\n'
+            'Laba (Rp): $totalProfit\n'
+            'Transaksi: $transactionCount\n'
+            'Item terjual: $unitsSold\n'
+            'Produk terlaris:\n$topProductLines\n'
+            'Pelanggan utama:\n$topCustomerLines',
+        systemInstruction:
+            'Kamu asisten laporan untuk UMKM Indonesia. '
+            'Bacakan dan jelaskan data laporan bisnis dalam 3–5 kalimat. '
+            'Bahasa santai, jelas, mudah dipahami pedagang. '
+            'Sebut penjualan, laba, tren produk terlaris, dan pelanggan utama bila ada. '
+            'Berikan satu saran praktis singkat berdasarkan data. '
+            'Jangan mengarang angka di luar data. '
+            'Jangan pakai istilah teknis atau bahasa Inggris.',
+        schema: GeminiSchemas.businessInsight,
+      ),
+    );
+
+    return _parseBusinessInsight(raw);
+  }
+
   void _ensureConfigured() {
     if (!isConfigured) {
       throw const AiException(
@@ -188,6 +231,26 @@ class AiService {
     }
 
     return detection;
+  }
+
+  String _parseBusinessInsight(String raw) {
+    final Object? decoded;
+    try {
+      decoded = jsonDecode(raw);
+    } catch (_) {
+      throw const AiException('Format jawaban AI tidak dapat dibaca.');
+    }
+
+    if (decoded is! Map<String, dynamic>) {
+      throw const AiException('AI tidak mengembalikan ringkasan laporan.');
+    }
+
+    final summary = decoded['summary'];
+    if (summary is! String || summary.trim().isEmpty) {
+      throw const AiException('AI tidak mengembalikan ringkasan laporan.');
+    }
+
+    return summary.trim();
   }
 
   ProductMatchResult _parseProductMatch(String raw, List<Product> catalog) {

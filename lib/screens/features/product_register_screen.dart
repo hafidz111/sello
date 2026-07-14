@@ -20,6 +20,7 @@ class ProductRegisterScreen extends StatefulWidget {
 class _ProductRegisterScreenState extends State<ProductRegisterScreen> {
   final _nameController = TextEditingController();
   final _priceController = TextEditingController(text: '0');
+  final _costController = TextEditingController(text: '0');
   final _stockController = TextEditingController(text: '0');
   final _picker = ImagePicker();
   final _productService = ProductService.instance;
@@ -31,6 +32,7 @@ class _ProductRegisterScreenState extends State<ProductRegisterScreen> {
   void dispose() {
     _nameController.dispose();
     _priceController.dispose();
+    _costController.dispose();
     _stockController.dispose();
     super.dispose();
   }
@@ -51,6 +53,9 @@ class _ProductRegisterScreenState extends State<ProductRegisterScreen> {
     final name = _nameController.text.trim();
     final price =
         int.tryParse(_priceController.text.replaceAll(RegExp(r'[^0-9]'), '')) ??
+        0;
+    final costPrice =
+        int.tryParse(_costController.text.replaceAll(RegExp(r'[^0-9]'), '')) ??
         0;
     final stock =
         int.tryParse(_stockController.text.replaceAll(RegExp(r'[^0-9]'), '')) ??
@@ -73,6 +78,7 @@ class _ProductRegisterScreenState extends State<ProductRegisterScreen> {
         userId: userId,
         name: name,
         price: price,
+        costPrice: costPrice,
         stock: stock,
         imagesByAngle: Map.from(_photos),
       );
@@ -107,6 +113,7 @@ class _ProductRegisterScreenState extends State<ProductRegisterScreen> {
         child: RegisterFormBody(
           nameController: _nameController,
           priceController: _priceController,
+          costController: _costController,
           stockController: _stockController,
           photos: _photos,
           isSaving: _isSaving,

@@ -20,6 +20,7 @@ Cek status di **Supabase Dashboard → Database → Migrations**.
 |------|-----|
 | `20260710120000_products_and_sales.sql` | Tabel products, product_images, sales, bucket product-images, RLS dev |
 | `20260714120000_rls_per_user.sql` | RLS per-user (Firebase UID), bucket privat, policy storage |
+| `20260714140000_sales_profit_customer.sql` | `cost_price`, `unit_cost`, `customer_name` untuk laba & pelanggan |
 | `20260714184500_fix_requesting_user_id_jwt_sub.sql` | Perbaiki `requesting_user_id()`: pakai `auth.jwt()->>'sub'` (Firebase UID bukan UUID) |
 
 ## Firebase Auth + RLS (wajib)

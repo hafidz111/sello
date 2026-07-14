@@ -76,6 +76,7 @@ class ProductService {
     required String userId,
     required String name,
     required int price,
+    required int costPrice,
     required int stock,
     required Map<String, Uint8List> imagesByAngle,
   }) async {
@@ -85,6 +86,9 @@ class ProductService {
     if (imagesByAngle.isEmpty) {
       throw const ProductException('Ambil minimal satu foto referensi produk.');
     }
+    if (costPrice < 0) {
+      throw const ProductException('Harga modal tidak boleh negatif.');
+    }
 
     try {
       final productRow = await _client
@@ -93,6 +97,7 @@ class ProductService {
             'user_id': userId,
             'name': name.trim(),
             'price': price,
+            'cost_price': costPrice,
             'stock': stock,
           })
           .select()
@@ -152,6 +157,7 @@ class ProductService {
     required String userId,
     required Product product,
     required int quantity,
+    String? customerName,
   }) async {
     if (quantity <= 0) {
       throw const ProductException('Jumlah penjualan minimal 1.');
@@ -159,6 +165,7 @@ class ProductService {
 
     final total = product.price * quantity;
     final newStock = product.stock - quantity;
+    final trimmedCustomer = customerName?.trim();
 
     try {
       await _client.from('sales').insert({
@@ -166,7 +173,10 @@ class ProductService {
         'product_id': product.id,
         'quantity': quantity,
         'unit_price': product.price,
+        'unit_cost': product.costPrice,
         'total': total,
+        if (trimmedCustomer != null && trimmedCustomer.isNotEmpty)
+          'customer_name': trimmedCustomer,
       });
 
       await _client

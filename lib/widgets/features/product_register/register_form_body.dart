@@ -15,7 +15,9 @@ class RegisterFormBody extends StatelessWidget {
     required this.stockController,
     required this.photos,
     required this.isSaving,
+    required this.isListeningVoice,
     required this.onCapturePhoto,
+    required this.onFillFromVoice,
     required this.onSave,
   });
 
@@ -25,7 +27,9 @@ class RegisterFormBody extends StatelessWidget {
   final TextEditingController stockController;
   final Map<String, Uint8List> photos;
   final bool isSaving;
+  final bool isListeningVoice;
   final ValueChanged<String> onCapturePhoto;
+  final VoidCallback onFillFromVoice;
   final VoidCallback onSave;
 
   @override
@@ -34,8 +38,21 @@ class RegisterFormBody extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Foto referensi dari berbagai sudut membantu scan mengenali produk saat penjualan.',
+          'Isi lengkap lewat suara (nama, harga jual, modal, stok), '
+          'lalu lengkapi foto referensi untuk scan kasir.',
           style: AppTextStyles.bodyMedium,
+        ),
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          onPressed: isSaving || isListeningVoice ? null : onFillFromVoice,
+          icon: Icon(
+            isListeningVoice ? Icons.hearing_rounded : Icons.mic_rounded,
+          ),
+          label: Text(
+            isListeningVoice
+                ? 'Mendengarkan deskripsi produk...'
+                : 'Isi form lewat suara lengkap',
+          ),
         ),
         const SizedBox(height: 20),
         TextField(

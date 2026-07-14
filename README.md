@@ -112,14 +112,14 @@ Legenda: **Selesai** · **Sebagian** · **Belum**
 
 | # | Fitur | Status | Keterangan |
 |---|-------|:------:|------------|
-| 1 | Kasir Suara & Scan | Sebagian | Satu tab Kasir: mode Suara (`speech_to_text` + Gemini) dan mode Scan (kamera + match katalog). Tanpa input teks. Barcode belum. |
+| 1 | Kasir Suara & Scan | Sebagian | Suara singkat + fuzzy match katalog + pelanggan; daftar produk lewat suara lengkap. Scan + customer. Barcode belum. |
 | 2 | Foto ke Konten | Belum | Placeholder. Upload foto & generator caption. |
 | 3 | Asisten WhatsApp | Belum | Belum ada halaman & integrasi WhatsApp Business API. |
 | 4 | Laporan Bisnis | Selesai | Filter periode + rentang tanggal; penjualan/laba/transaksi/item; produk & pelanggan; laporan AI. |
 | 5 | Terjemah & Ekspor | Belum | Belum ada halaman & mesin terjemahan. |
 | 6 | Katalog Digital | Sebagian | Daftar produk terdaftar (`ProductListScreen`). Link share belum. |
 | 7 | Mode Offline | Belum | Belum ada penyimpanan lokal & sinkronisasi. |
-| 8 | Edukasi Mikro | Belum | Belum ada halaman & tips berbasis data. |
+| 8 | Edukasi Mikro | Selesai | Tips AI dari penjualan 30 hari terakhir (Menu / kartu fitur). |
 
 ### Backend & Integrasi
 
@@ -399,10 +399,11 @@ File berikut **tidak** boleh di-commit (sudah ada di `.gitignore`):
 - [x] ProductListScreen + routing kartu fitur (`feature_navigation.dart`)
 - [x] DashboardProvider + statistik beranda nyata
 - [ ] Generate Code 128 + scan barcode (`mobile_scanner`)
-- [ ] Pisah AI: suara jualan (singkat) vs daftar produk (lengkap)
+- [x] Pisah AI: suara jualan (singkat) vs daftar produk (lengkap) + fuzzy match
 - [x] Input suara (`speech_to_text`)
 - [x] Auth Firebase + JWT ke Supabase RLS
 - [x] Laporan Bisnis: agregasi harian/mingguan/bulanan/tahunan + insight
+- [x] Pelanggan di kasir (`customer_name`) + Edukasi Mikro
 - [ ] Implementasi fitur konten, WhatsApp, dll.
 - [ ] Mode offline & sinkronisasi
 - [ ] Pengujian (unit/widget/integration)

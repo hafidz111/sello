@@ -25,6 +25,7 @@ class CashierScanSection extends StatefulWidget {
 class _CashierScanSectionState extends State<CashierScanSection> {
   final _aiService = AiService.instance;
   final _productService = ProductService.instance;
+  final _customerController = TextEditingController();
 
   CameraController? _controller;
   bool _isInitializingCamera = true;
@@ -47,6 +48,7 @@ class _CashierScanSectionState extends State<CashierScanSection> {
 
   @override
   void dispose() {
+    _customerController.dispose();
     _controller?.dispose();
     super.dispose();
   }
@@ -212,17 +214,21 @@ class _CashierScanSectionState extends State<CashierScanSection> {
     setState(() => _isRecording = true);
     final userId = context.read<AuthProvider>().userId;
 
+    final customerName = _customerController.text.trim();
+
     try {
       await _productService.recordSale(
         userId: userId,
         product: product,
         quantity: _quantity,
+        customerName: customerName.isEmpty ? null : customerName,
       );
       if (!mounted) return;
 
       AppSnackbar.success(
         context,
-        'Penjualan tercatat: $_quantity ${product.name}',
+        'Penjualan tercatat: $_quantity ${product.name}'
+        '${customerName.isEmpty ? '' : ' · $customerName'}',
       );
 
       await context.read<DashboardProvider>().load(userId);
@@ -233,6 +239,7 @@ class _CashierScanSectionState extends State<CashierScanSection> {
         _claimedProduct = null;
         _quantity = 1;
         _isRecording = false;
+        _customerController.clear();
       });
 
       await _loadCatalog();
@@ -297,6 +304,7 @@ class _CashierScanSectionState extends State<CashierScanSection> {
           isDetecting: _isDetecting,
           isRecording: _isRecording,
           canDetect: _controller != null,
+          customerController: _customerController,
           onOpenRegister: _openRegister,
           onDetect: _detectProduct,
           onRecordSale: _recordSale,

@@ -7,9 +7,8 @@ import 'package:sello/providers/report_provider.dart';
 import 'package:sello/styles/app_colors.dart';
 import 'package:sello/styles/app_text_styles.dart';
 import 'package:sello/widgets/common/app_snackbar.dart';
-import 'package:sello/widgets/features/report/report_empty_state.dart';
 import 'package:sello/widgets/features/report/report_insight_card.dart';
-import 'package:sello/widgets/features/report/report_period_selector.dart';
+import 'package:sello/widgets/features/report/report_period_filter_button.dart';
 import 'package:sello/widgets/features/report/report_ranked_list.dart';
 import 'package:sello/widgets/features/report/report_summary_cards.dart';
 
@@ -112,21 +111,30 @@ class _ReportScreenState extends State<ReportScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Laporan Bisnis', style: AppTextStyles.headlineMedium),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Laporan Bisnis',
+                          style: AppTextStyles.headlineMedium,
+                        ),
+                      ),
+                      ReportPeriodFilterButton(
+                        selected: reportState.period,
+                        enabled: !reportState.isLoading,
+                        onSelected: _onPeriodSelected,
+                        onPickCustomRange: _pickCustomRange,
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 6),
                   Text(
-                    'Filter periode atau pilih rentang tanggal, lalu baca ringkasan AI.',
-                    style: AppTextStyles.bodyMedium,
+                    reportState.period.label,
+                    style: AppTextStyles.titleMedium.copyWith(
+                      color: AppColors.warning,
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  ReportPeriodSelector(
-                    selected: reportState.period,
-                    onSelected:
-                        reportState.isLoading ? (_) {} : _onPeriodSelected,
-                    onPickCustomRange:
-                        reportState.isLoading ? () {} : _pickCustomRange,
-                  ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 4),
                   Text(
                     _rangeLabel(report.rangeStart, report.rangeEndInclusive),
                     style: AppTextStyles.bodySmall,
@@ -140,21 +148,6 @@ class _ReportScreenState extends State<ReportScreen> {
               hasScrollBody: false,
               child: Center(child: CircularProgressIndicator()),
             )
-          else if (!report.hasSales)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(padding, 12, padding, bottomPad),
-                child: Column(
-                  children: [
-                    ReportInsightCard(insight: report.insight),
-                    const SizedBox(height: 12),
-                    ReportEmptyState(
-                      periodLabel: reportState.period.label.toLowerCase(),
-                    ),
-                  ],
-                ),
-              ),
-            )
           else
             SliverToBoxAdapter(
               child: Padding(
@@ -162,11 +155,15 @@ class _ReportScreenState extends State<ReportScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    ReportInsightCard(insight: report.insight),
+                    const SizedBox(height: 16),
+                    Text('Ringkasan', style: AppTextStyles.titleMedium),
+                    const SizedBox(height: 10),
                     ReportSummaryCards(report: report),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     ReportRankedList(
                       title: 'Produk terlaris',
-                      emptyMessage: 'Belum ada produk terjual di periode ini.',
+                      placeholderTitle: 'Belum ada produk',
                       items: report.topProducts
                           .map(
                             (p) => ReportMetricRow(
@@ -182,7 +179,7 @@ class _ReportScreenState extends State<ReportScreen> {
                     const SizedBox(height: 12),
                     ReportRankedList(
                       title: 'Pelanggan utama',
-                      emptyMessage: 'Belum ada data pelanggan di periode ini.',
+                      placeholderTitle: 'Belum ada pelanggan',
                       items: report.topCustomers
                           .map(
                             (c) => ReportMetricRow(
@@ -195,8 +192,6 @@ class _ReportScreenState extends State<ReportScreen> {
                           )
                           .toList(),
                     ),
-                    const SizedBox(height: 12),
-                    ReportInsightCard(insight: report.insight),
                   ],
                 ),
               ),

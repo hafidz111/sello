@@ -4,6 +4,7 @@ import 'package:sello/models/product.dart';
 import 'package:sello/models/product_match_result.dart';
 import 'package:sello/styles/app_colors.dart';
 import 'package:sello/styles/app_text_styles.dart';
+import 'package:sello/widgets/features/cashier/cashier_customer_field.dart';
 import 'package:sello/widgets/features/product_scan/scan_claimed_product_card.dart';
 import 'package:sello/widgets/features/product_scan/scan_match_card.dart';
 
@@ -18,6 +19,7 @@ class ScanBottomPanel extends StatelessWidget {
     required this.isDetecting,
     required this.isRecording,
     required this.canDetect,
+    required this.customerController,
     required this.onOpenRegister,
     required this.onDetect,
     required this.onRecordSale,
@@ -34,6 +36,7 @@ class ScanBottomPanel extends StatelessWidget {
   final bool isDetecting;
   final bool isRecording;
   final bool canDetect;
+  final TextEditingController customerController;
   final VoidCallback onOpenRegister;
   final VoidCallback onDetect;
   final VoidCallback onRecordSale;
@@ -109,6 +112,11 @@ class ScanBottomPanel extends StatelessWidget {
                     icon: const Icon(Icons.add_rounded),
                   ),
                 ],
+              ),
+              const SizedBox(height: 12),
+              CashierCustomerField(
+                controller: customerController,
+                enabled: !isRecording,
               ),
               const SizedBox(height: 12),
               FilledButton.icon(

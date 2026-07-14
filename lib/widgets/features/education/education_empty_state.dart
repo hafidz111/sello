@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:sello/styles/app_colors.dart';
 import 'package:sello/styles/app_text_styles.dart';
 
-class ReportEmptyState extends StatelessWidget {
-  const ReportEmptyState({super.key, required this.periodLabel});
+class EducationEmptyState extends StatelessWidget {
+  const EducationEmptyState({super.key, required this.onRetry});
 
-  final String periodLabel;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -20,21 +20,26 @@ class ReportEmptyState extends StatelessWidget {
       child: Column(
         children: [
           const Icon(
-            Icons.bar_chart_rounded,
+            Icons.school_outlined,
             size: 40,
             color: AppColors.textHint,
           ),
           const SizedBox(height: 12),
           Text(
-            'Belum ada penjualan $periodLabel',
-            textAlign: TextAlign.center,
+            'Tips belum tersedia',
             style: AppTextStyles.titleMedium,
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 6),
           Text(
-            'Catat penjualan lewat kasir suara atau scan supaya laporan terisi.',
-            textAlign: TextAlign.center,
+            'Catat beberapa penjualan dulu, lalu buka lagi halaman ini.',
             style: AppTextStyles.bodyMedium,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          OutlinedButton(
+            onPressed: onRetry,
+            child: const Text('Buat tips edukasi'),
           ),
         ],
       ),

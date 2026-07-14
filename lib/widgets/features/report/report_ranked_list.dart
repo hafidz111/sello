@@ -23,16 +23,28 @@ class ReportRankedList extends StatelessWidget {
   const ReportRankedList({
     super.key,
     required this.title,
-    required this.emptyMessage,
+    required this.placeholderTitle,
     required this.items,
   });
 
   final String title;
-  final String emptyMessage;
+  final String placeholderTitle;
   final List<ReportMetricRow> items;
 
   @override
   Widget build(BuildContext context) {
+    final visibleItems = items.isEmpty
+        ? [
+            ReportMetricRow(
+              title: placeholderTitle,
+              revenue: 0,
+              profit: 0,
+              transactionCount: 0,
+              itemCount: 0,
+            ),
+          ]
+        : items;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -46,13 +58,10 @@ class ReportRankedList extends StatelessWidget {
         children: [
           Text(title, style: AppTextStyles.titleMedium),
           const SizedBox(height: 12),
-          if (items.isEmpty)
-            Text(emptyMessage, style: AppTextStyles.bodyMedium)
-          else
-            for (var i = 0; i < items.length; i++) ...[
-              if (i > 0) const SizedBox(height: 12),
-              _RankedItem(rank: i + 1, item: items[i]),
-            ],
+          for (var i = 0; i < visibleItems.length; i++) ...[
+            if (i > 0) const SizedBox(height: 12),
+            _RankedItem(rank: i + 1, item: visibleItems[i]),
+          ],
         ],
       ),
     );

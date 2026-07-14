@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sello/core/utils/responsive.dart';
 import 'package:sello/providers/auth_provider.dart';
+import 'package:sello/screens/features/education_screen.dart';
 import 'package:sello/screens/features/product_list_screen.dart';
 import 'package:sello/styles/app_colors.dart';
 import 'package:sello/styles/app_text_styles.dart';
@@ -14,6 +15,12 @@ class MenuScreen extends StatelessWidget {
   Future<void> _openProducts(BuildContext context) {
     return Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const ProductListScreen()),
+    );
+  }
+
+  Future<void> _openEducation(BuildContext context) {
+    return Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const EducationScreen()),
     );
   }
 
@@ -105,10 +112,7 @@ class MenuScreen extends StatelessWidget {
                   color: const Color(0xFFEF4444),
                   title: 'Edukasi Mikro',
                   subtitle: 'Tips bisnis singkat dari data penjualan',
-                  onTap: () => AppSnackbar.info(
-                    context,
-                    'Edukasi Mikro segera hadir.',
-                  ),
+                  onTap: () => _openEducation(context),
                 ),
               ],
             ),

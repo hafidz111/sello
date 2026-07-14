@@ -2,13 +2,16 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:sello/core/utils/responsive.dart';
 import 'package:sello/providers/auth_provider.dart';
+import 'package:sello/services/ai_service.dart';
 import 'package:sello/services/product_service.dart';
 import 'package:sello/styles/app_colors.dart';
 import 'package:sello/widgets/common/app_snackbar.dart';
 import 'package:sello/widgets/features/product_register/register_form_body.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 
 class ProductRegisterScreen extends StatefulWidget {
   const ProductRegisterScreen({super.key});
@@ -24,9 +27,19 @@ class _ProductRegisterScreenState extends State<ProductRegisterScreen> {
   final _stockController = TextEditingController(text: '0');
   final _picker = ImagePicker();
   final _productService = ProductService.instance;
+  final _aiService = AiService.instance;
+  final _speech = SpeechToText();
 
   final Map<String, Uint8List> _photos = {};
   bool _isSaving = false;
+  bool _isListeningVoice = false;
+  bool _speechReady = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initSpeech();
+  }
 
   @override
   void dispose() {
@@ -34,7 +47,20 @@ class _ProductRegisterScreenState extends State<ProductRegisterScreen> {
     _priceController.dispose();
     _costController.dispose();
     _stockController.dispose();
+    if (_speech.isListening) {
+      _speech.stop();
+    }
     super.dispose();
+  }
+
+  Future<void> _initSpeech() async {
+    final ready = await _speech.initialize(
+      onError: (_) {
+        if (!mounted) return;
+        setState(() => _isListeningVoice = false);
+      },
+    );
+    if (mounted) setState(() => _speechReady = ready);
   }
 
   Future<void> _capturePhoto(String angle) async {
@@ -47,6 +73,78 @@ class _ProductRegisterScreenState extends State<ProductRegisterScreen> {
 
     final bytes = await file.readAsBytes();
     setState(() => _photos[angle] = bytes);
+  }
+
+  Future<void> _fillFromVoice() async {
+    if (_isSaving || _isListeningVoice) return;
+
+    if (!_speechReady) {
+      final permission = await Permission.microphone.request();
+      if (!permission.isGranted) {
+        if (!mounted) return;
+        AppSnackbar.warning(
+          context,
+          'Izin mikrofon ditolak. Aktifkan izin mikrofon di pengaturan perangkat.',
+        );
+        return;
+      }
+      await _initSpeech();
+      if (!_speechReady) {
+        if (!mounted) return;
+        AppSnackbar.error(
+          context,
+          'Pengenalan suara tidak tersedia di perangkat ini.',
+        );
+        return;
+      }
+    }
+
+    setState(() => _isListeningVoice = true);
+    await _speech.listen(
+      onResult: (result) async {
+        if (!result.finalResult) return;
+        final text = result.recognizedWords.trim();
+        await _speech.stop();
+        if (!mounted) return;
+        if (text.isEmpty) {
+          setState(() => _isListeningVoice = false);
+          AppSnackbar.warning(context, 'Suara tidak terdengar jelas. Coba lagi.');
+          return;
+        }
+        await _extractProductListing(text);
+      },
+      listenOptions: SpeechListenOptions(
+        localeId: 'id_ID',
+        listenFor: const Duration(seconds: 20),
+        pauseFor: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  Future<void> _extractProductListing(String text) async {
+    try {
+      final draft = await _aiService.extractProductListing(text);
+      if (!mounted) return;
+      setState(() {
+        _nameController.text = draft.name;
+        _priceController.text = '${draft.price}';
+        _costController.text = '${draft.costPrice}';
+        _stockController.text = '${draft.stock}';
+        _isListeningVoice = false;
+      });
+      AppSnackbar.success(
+        context,
+        'Form terisi dari suara. Cek lagi lalu ambil foto referensi.',
+      );
+    } on AiException catch (e) {
+      if (!mounted) return;
+      setState(() => _isListeningVoice = false);
+      AppSnackbar.error(context, e.message);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isListeningVoice = false);
+      AppSnackbar.error(context, 'Gagal membaca deskripsi produk dari suara.');
+    }
   }
 
   Future<void> _save() async {
@@ -117,7 +215,9 @@ class _ProductRegisterScreenState extends State<ProductRegisterScreen> {
           stockController: _stockController,
           photos: _photos,
           isSaving: _isSaving,
+          isListeningVoice: _isListeningVoice,
           onCapturePhoto: _capturePhoto,
+          onFillFromVoice: _fillFromVoice,
           onSave: _save,
         ),
       ),

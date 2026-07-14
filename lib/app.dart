@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:sello/core/constants/app_constants.dart';
 import 'package:sello/providers/auth_provider.dart';
 import 'package:sello/providers/dashboard_provider.dart';
+import 'package:sello/providers/education_provider.dart';
 import 'package:sello/providers/navigation_provider.dart';
 import 'package:sello/providers/report_provider.dart';
 import 'package:sello/screens/auth/auth_shell.dart';
@@ -20,6 +21,7 @@ class SelloApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => NavigationProvider()),
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
         ChangeNotifierProvider(create: (_) => ReportProvider()),
+        ChangeNotifierProvider(create: (_) => EducationProvider()),
       ],
       child: MaterialApp(
         title: AppConstants.appName,

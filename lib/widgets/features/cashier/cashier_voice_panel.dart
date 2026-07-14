@@ -88,9 +88,11 @@ class CashierVoicePanel extends StatelessWidget {
 
   String get _statusLabel {
     return switch (status) {
-      CashierVoiceStatus.idle => 'Ucapkan penjualan, misalnya "jual 3 kopi 5 ribu"',
+      CashierVoiceStatus.idle =>
+        'Ucapkan penjualan singkat, mis. "jual 3 kopi". Nama akan dicocokkan ke katalog.',
       CashierVoiceStatus.listening => 'Mendengarkan...',
-      CashierVoiceStatus.processing => 'AI sedang merapikan catatan...',
+      CashierVoiceStatus.processing =>
+        'AI merapikan catatan dan mencocokkan katalog...',
     };
   }
 }

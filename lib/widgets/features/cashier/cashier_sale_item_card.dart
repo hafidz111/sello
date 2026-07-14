@@ -11,12 +11,15 @@ class CashierSaleItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final matched = item.matchedFromCatalog;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(
+          color: matched ? AppColors.success.withValues(alpha: 0.35) : AppColors.border,
+        ),
       ),
       child: Row(
         children: [
@@ -43,6 +46,15 @@ class CashierSaleItemCard extends StatelessWidget {
                 Text(
                   '@ ${formatRupiah(item.unitPrice)}',
                   style: AppTextStyles.bodySmall,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  matched
+                      ? 'Cocok katalog'
+                      : 'Belum cocok katalog',
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: matched ? AppColors.success : AppColors.warning,
+                  ),
                 ),
               ],
             ),

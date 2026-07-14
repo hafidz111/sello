@@ -5,6 +5,7 @@ import '../../../styles/app_text_styles.dart';
 
 class CashierModeButton extends StatelessWidget {
   const CashierModeButton({
+    super.key,
     required this.icon,
     required this.label,
     required this.isSelected,

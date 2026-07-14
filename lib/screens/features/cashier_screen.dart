@@ -3,9 +3,14 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:sello/core/utils/responsive.dart';
 import 'package:sello/models/cashier_mode.dart';
+import 'package:sello/models/product.dart';
 import 'package:sello/models/sale_item.dart';
+import 'package:sello/providers/auth_provider.dart';
+import 'package:sello/providers/dashboard_provider.dart';
 import 'package:sello/providers/navigation_provider.dart';
+import 'package:sello/providers/report_provider.dart';
 import 'package:sello/services/ai_service.dart';
+import 'package:sello/services/product_service.dart';
 import 'package:sello/widgets/common/app_snackbar.dart';
 import 'package:sello/widgets/features/cashier/cashier_header.dart';
 import 'package:sello/widgets/features/cashier/cashier_mode_selector.dart';
@@ -23,13 +28,17 @@ class CashierScreen extends StatefulWidget {
 
 class _CashierScreenState extends State<CashierScreen> {
   final _aiService = AiService.instance;
+  final _productService = ProductService.instance;
   final _speech = SpeechToText();
+  final _customerController = TextEditingController();
   late final NavigationProvider _navigationProvider;
 
   CashierMode _mode = CashierMode.voice;
   CashierVoiceStatus _voiceStatus = CashierVoiceStatus.idle;
   bool _speechReady = false;
+  bool _isSaving = false;
 
+  List<Product> _catalog = const [];
   List<SaleItem> _items = const [];
 
   int get _grandTotal => _items.fold(0, (sum, item) => sum + item.subtotal);
@@ -40,12 +49,16 @@ class _CashierScreenState extends State<CashierScreen> {
     _navigationProvider = context.read<NavigationProvider>();
     _initSpeech();
     _navigationProvider.addListener(_onNavigationChanged);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _applyPendingMode());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _applyPendingMode();
+      _loadCatalog();
+    });
   }
 
   @override
   void dispose() {
     _navigationProvider.removeListener(_onNavigationChanged);
+    _customerController.dispose();
     if (_speech.isListening) {
       _speech.stop();
     }
@@ -60,6 +73,17 @@ class _CashierScreenState extends State<CashierScreen> {
     final pending = _navigationProvider.consumePendingCashierMode();
     if (pending != null && mounted) {
       setState(() => _mode = pending);
+    }
+  }
+
+  Future<void> _loadCatalog() async {
+    final userId = context.read<AuthProvider>().userId;
+    try {
+      final products = await _productService.fetchProducts(userId);
+      if (!mounted) return;
+      setState(() => _catalog = products);
+    } catch (_) {
+      // Katalog kosong tetap boleh input suara; fuzzy match dilewati.
     }
   }
 
@@ -82,7 +106,7 @@ class _CashierScreenState extends State<CashierScreen> {
   }
 
   Future<void> _handleMicTap() async {
-    if (_voiceStatus != CashierVoiceStatus.idle) return;
+    if (_voiceStatus != CashierVoiceStatus.idle || _isSaving) return;
 
     if (!_speechReady) {
       final permission = await Permission.microphone.request();
@@ -140,15 +164,19 @@ class _CashierScreenState extends State<CashierScreen> {
     setState(() => _voiceStatus = CashierVoiceStatus.processing);
 
     try {
-      final items = await _aiService.extractSale(text);
+      if (_catalog.isEmpty) {
+        await _loadCatalog();
+      }
+      final items = await _aiService.extractSale(text, catalog: _catalog);
       if (!mounted) return;
       setState(() {
         _items = items;
         _voiceStatus = CashierVoiceStatus.idle;
       });
+      final matched = items.where((item) => item.matchedFromCatalog).length;
       AppSnackbar.success(
         context,
-        'Berhasil mencatat ${items.length} item penjualan.',
+        'Terdeteksi ${items.length} item, $matched cocok katalog.',
       );
     } on AiException catch (e) {
       if (!mounted) return;
@@ -157,8 +185,74 @@ class _CashierScreenState extends State<CashierScreen> {
     }
   }
 
+  Future<void> _saveSales() async {
+    final matched = _items.where((item) => item.matchedFromCatalog).toList();
+    if (matched.isEmpty) {
+      AppSnackbar.warning(
+        context,
+        'Belum ada item yang cocok katalog. Daftarkan produk dulu atau sebut nama lebih jelas.',
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+    final userId = context.read<AuthProvider>().userId;
+    final customerName = _customerController.text.trim();
+
+    try {
+      for (final item in matched) {
+        Product? product;
+        for (final entry in _catalog) {
+          if (entry.id == item.productId) {
+            product = entry;
+            break;
+          }
+        }
+        if (product == null) continue;
+
+        await _productService.recordSale(
+          userId: userId,
+          product: product,
+          quantity: item.quantity,
+          customerName: customerName.isEmpty ? null : customerName,
+        );
+      }
+
+      if (!mounted) return;
+      AppSnackbar.success(
+        context,
+        'Berhasil menyimpan ${matched.length} penjualan'
+        '${customerName.isEmpty ? '' : ' untuk $customerName'}.',
+      );
+
+      await context.read<DashboardProvider>().load(userId);
+      if (mounted) {
+        await context.read<ReportProvider>().load(userId);
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _items = const [];
+        _customerController.clear();
+        _isSaving = false;
+      });
+      await _loadCatalog();
+    } on ProductException catch (e) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      AppSnackbar.error(context, e.message);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      AppSnackbar.error(context, 'Gagal menyimpan penjualan.');
+    }
+  }
+
   void _clear() {
-    setState(() => _items = const []);
+    setState(() {
+      _items = const [];
+      _customerController.clear();
+    });
   }
 
   void _setMode(CashierMode mode) {
@@ -220,10 +314,13 @@ class _CashierScreenState extends State<CashierScreen> {
         Expanded(
           child: CashierResultArea(
             isLoading: _voiceStatus == CashierVoiceStatus.processing,
+            isSaving: _isSaving,
             items: _items,
             grandTotal: _grandTotal,
             horizontalPadding: padding,
+            customerController: _customerController,
             onClear: _clear,
+            onSave: _saveSales,
           ),
         ),
       ],

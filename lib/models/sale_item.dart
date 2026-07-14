@@ -3,11 +3,17 @@ class SaleItem {
     required this.name,
     required this.quantity,
     required this.unitPrice,
+    this.productId,
+    this.matchedFromCatalog = false,
+    this.matchScore,
   });
 
   final String name;
   final int quantity;
   final int unitPrice;
+  final String? productId;
+  final bool matchedFromCatalog;
+  final double? matchScore;
 
   int get subtotal => quantity * unitPrice;
 
@@ -25,13 +31,24 @@ class SaleItem {
     'name': name,
     'quantity': quantity,
     'unit_price': unitPrice,
+    if (productId != null) 'product_id': productId,
   };
 
-  SaleItem copyWith({String? name, int? quantity, int? unitPrice}) {
+  SaleItem copyWith({
+    String? name,
+    int? quantity,
+    int? unitPrice,
+    String? productId,
+    bool? matchedFromCatalog,
+    double? matchScore,
+  }) {
     return SaleItem(
       name: name ?? this.name,
       quantity: quantity ?? this.quantity,
       unitPrice: unitPrice ?? this.unitPrice,
+      productId: productId ?? this.productId,
+      matchedFromCatalog: matchedFromCatalog ?? this.matchedFromCatalog,
+      matchScore: matchScore ?? this.matchScore,
     );
   }
 

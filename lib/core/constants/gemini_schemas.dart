@@ -87,11 +87,73 @@ abstract final class GeminiSchemas {
       'summary': {
         'type': 'STRING',
         'description':
-            'Laporan AI 3–5 kalimat Bahasa Indonesia yang membacakan '
-            'penjualan, laba, produk terlaris, dan pelanggan utama. '
-            'Mudah dipahami pedagang UMKM. Hindari jargon teknis.',
+            'Ringkasan 2–4 kalimat Bahasa Indonesia. '
+            'Saran singkat hanya memakai fitur aplikasi Sello. '
+            'Jangan sebut aplikasi lain.',
       },
     },
     'required': ['summary'],
+  };
+
+  static const productDraft = {
+    'type': 'OBJECT',
+    'properties': {
+      'name': {
+        'type': 'STRING',
+        'description': 'Nama produk lengkap yang akan didaftarkan.',
+      },
+      'price': {
+        'type': 'INTEGER',
+        'description': 'Harga jual satuan Rupiah tanpa titik/koma. 0 bila tidak disebut.',
+      },
+      'cost_price': {
+        'type': 'INTEGER',
+        'description':
+            'Harga modal/HPP satuan Rupiah. 0 bila tidak disebut.',
+      },
+      'stock': {
+        'type': 'INTEGER',
+        'description': 'Stok awal pcs. 0 bila tidak disebut.',
+      },
+      'notes': {
+        'type': 'STRING',
+        'description': 'Catatan tambahan singkat, boleh kosong.',
+      },
+    },
+    'required': ['name', 'price', 'cost_price', 'stock', 'notes'],
+  };
+
+  static const educationTips = {
+    'type': 'OBJECT',
+    'properties': {
+      'headline': {
+        'type': 'STRING',
+        'description': 'Judul ringkas dalam Bahasa Indonesia.',
+      },
+      'tips': {
+        'type': 'ARRAY',
+        'description': 'Tepat 3 tips. Aksi harus di dalam aplikasi Sello.',
+        'items': {
+          'type': 'OBJECT',
+          'properties': {
+            'title': {
+              'type': 'STRING',
+              'description': 'Judul tip singkat.',
+            },
+            'body': {
+              'type': 'STRING',
+              'description': 'Penjelasan tip 1–2 kalimat.',
+            },
+            'action_hint': {
+              'type': 'STRING',
+              'description':
+                  'Aksi di Sello saja, mis. buka Kasir / Laporan / Produk.',
+            },
+          },
+          'required': ['title', 'body', 'action_hint'],
+        },
+      },
+    },
+    'required': ['headline', 'tips'],
   };
 }

@@ -31,6 +31,7 @@ class ReportService {
     required String userId,
     required ReportPeriod period,
     ReportDateRange? customRange,
+    bool includeInsight = true,
   }) async {
     final range = period == ReportPeriod.custom
         ? (customRange ?? ReportDateRange.forPeriod(ReportPeriod.custom))
@@ -47,6 +48,24 @@ class ReportService {
           ? _formatRangeLabel(range.start, range.endInclusive)
           : period.label;
 
+      // Tanpa transaksi: jangan panggil AI (hemat token).
+      if (aggregated.transactionCount == 0) {
+        return BusinessReport(
+          period: period,
+          rangeStart: range.start,
+          rangeEndInclusive: range.endInclusive,
+          totalRevenue: 0,
+          totalProfit: 0,
+          transactionCount: 0,
+          unitsSold: 0,
+          topProducts: const [],
+          topCustomers: const [],
+          insight:
+              'Belum ada penjualan untuk $periodLabel. '
+              'Catat transaksi di kasir untuk melihat ringkasan.',
+        );
+      }
+
       final fallBackInsight = _buildLocalInsight(
         periodLabel: periodLabel,
         totalRevenue: aggregated.totalRevenue,
@@ -58,7 +77,7 @@ class ReportService {
       );
 
       var insight = fallBackInsight;
-      if (_aiService.isConfigured && aggregated.transactionCount > 0) {
+      if (includeInsight && _aiService.isConfigured) {
         try {
           insight = await _aiService.summarizeBusinessReport(
             periodLabel: periodLabel,
@@ -67,6 +86,7 @@ class ReportService {
             transactionCount: aggregated.transactionCount,
             unitsSold: aggregated.unitsSold,
             topProducts: aggregated.topProducts
+                .take(3)
                 .map(
                   (p) =>
                       '${p.productName}: penjualan Rp ${p.revenue}, '
@@ -75,6 +95,7 @@ class ReportService {
                 )
                 .toList(),
             topCustomers: aggregated.topCustomers
+                .take(3)
                 .map(
                   (c) =>
                       '${c.customerName}: penjualan Rp ${c.revenue}, '

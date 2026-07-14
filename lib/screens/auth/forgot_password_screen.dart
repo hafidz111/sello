@@ -5,70 +5,61 @@ import 'package:sello/providers/auth_provider.dart';
 import 'package:sello/styles/app_colors.dart';
 import 'package:sello/widgets/common/app_safe_area.dart';
 import 'package:sello/widgets/common/app_snackbar.dart';
-import 'package:sello/widgets/features/login/login_form.dart';
+import 'package:sello/widgets/features/login/forgot_password_form.dart';
 import 'package:sello/widgets/features/login/login_header.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({
+class ForgotPasswordScreen extends StatefulWidget {
+  const ForgotPasswordScreen({
     super.key,
-    this.initialEmail = '',
-    required this.onEmailChanged,
-    required this.onRegister,
-    required this.onForgotPassword,
+    required this.initialEmail,
+    required this.onBack,
   });
 
   final String initialEmail;
-  final ValueChanged<String> onEmailChanged;
-  final VoidCallback onRegister;
-  final VoidCallback onForgotPassword;
+  final VoidCallback onBack;
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _emailController;
-  final _passwordController = TextEditingController();
   bool _isLoading = false;
-  bool _obscurePassword = true;
 
   @override
   void initState() {
     super.initState();
     _emailController = TextEditingController(text: widget.initialEmail);
-    _emailController.addListener(_handleEmailChanged);
-  }
-
-  void _handleEmailChanged() {
-    widget.onEmailChanged(_emailController.text.trim());
   }
 
   @override
   void dispose() {
-    _emailController
-      ..removeListener(_handleEmailChanged)
-      ..dispose();
-    _passwordController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
+  Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
-      await context.read<AuthProvider>().login(
+      await context.read<AuthProvider>().sendPasswordResetEmail(
             email: _emailController.text.trim(),
-            password: _passwordController.text,
           );
+      if (!mounted) return;
+      AppSnackbar.success(
+        context,
+        'Link reset password telah dikirim. Cek email kamu.',
+      );
+      widget.onBack();
     } on AuthException catch (error) {
       if (!mounted) return;
       AppSnackbar.error(context, error.message);
     } catch (_) {
       if (!mounted) return;
-      AppSnackbar.error(context, 'Gagal masuk. Coba lagi.');
+      AppSnackbar.error(context, 'Gagal mengirim link reset. Coba lagi.');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -92,17 +83,12 @@ class _LoginScreenState extends State<LoginScreen> {
               const LoginHeader(),
               SizedBox(height: Responsive.isTablet(context) ? 40 : 32),
               Expanded(
-                child: LoginForm(
+                child: ForgotPasswordForm(
                   formKey: _formKey,
                   emailController: _emailController,
-                  passwordController: _passwordController,
-                  obscurePassword: _obscurePassword,
                   isLoading: _isLoading,
-                  onTogglePassword: () =>
-                      setState(() => _obscurePassword = !_obscurePassword),
-                  onSubmit: _handleLogin,
-                  onRegister: widget.onRegister,
-                  onForgotPassword: widget.onForgotPassword,
+                  onSubmit: _handleSubmit,
+                  onBack: widget.onBack,
                 ),
               ),
             ],

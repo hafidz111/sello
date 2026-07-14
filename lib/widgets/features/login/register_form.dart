@@ -4,29 +4,33 @@ import 'package:sello/styles/app_colors.dart';
 import 'package:sello/styles/app_text_styles.dart';
 import 'package:sello/widgets/common/responsive_center.dart';
 
-class LoginForm extends StatelessWidget {
-  const LoginForm({
+class RegisterForm extends StatelessWidget {
+  const RegisterForm({
     super.key,
     required this.formKey,
     required this.emailController,
     required this.passwordController,
+    required this.confirmPasswordController,
     required this.obscurePassword,
+    required this.obscureConfirmPassword,
     required this.isLoading,
     required this.onTogglePassword,
+    required this.onToggleConfirmPassword,
     required this.onSubmit,
-    required this.onRegister,
-    required this.onForgotPassword,
+    required this.onLogin,
   });
 
   final GlobalKey<FormState> formKey;
   final TextEditingController emailController;
   final TextEditingController passwordController;
+  final TextEditingController confirmPasswordController;
   final bool obscurePassword;
+  final bool obscureConfirmPassword;
   final bool isLoading;
   final VoidCallback onTogglePassword;
+  final VoidCallback onToggleConfirmPassword;
   final VoidCallback onSubmit;
-  final VoidCallback onRegister;
-  final VoidCallback onForgotPassword;
+  final VoidCallback onLogin;
 
   @override
   Widget build(BuildContext context) {
@@ -50,10 +54,10 @@ class LoginForm extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Masuk', style: AppTextStyles.headlineMedium),
+                Text('Daftar', style: AppTextStyles.headlineMedium),
                 const SizedBox(height: 6),
                 Text(
-                  'Kelola bisnis Anda dengan bantuan AI',
+                  'Buat akun untuk mulai kelola bisnis',
                   style: AppTextStyles.bodyMedium,
                 ),
                 const SizedBox(height: 28),
@@ -61,6 +65,7 @@ class LoginForm extends StatelessWidget {
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
+                  autocorrect: false,
                   decoration: const InputDecoration(
                     labelText: 'Email',
                     hintText: 'nama@email.com',
@@ -77,11 +82,10 @@ class LoginForm extends StatelessWidget {
                 TextFormField(
                   controller: passwordController,
                   obscureText: obscurePassword,
-                  textInputAction: TextInputAction.done,
-                  onFieldSubmitted: (_) => onSubmit(),
+                  textInputAction: TextInputAction.next,
                   decoration: InputDecoration(
                     labelText: 'Password',
-                    hintText: 'Masukkan password',
+                    hintText: 'Minimal 6 karakter',
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -96,18 +100,42 @@ class LoginForm extends StatelessWidget {
                     if (value == null || value.isEmpty) {
                       return 'Password wajib diisi';
                     }
+                    if (value.length < 6) {
+                      return 'Password minimal 6 karakter';
+                    }
                     return null;
                   },
                 ),
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: onForgotPassword,
-                    child: const Text('Lupa password?'),
-                  ),
-                ),
                 const SizedBox(height: 16),
+                TextFormField(
+                  controller: confirmPasswordController,
+                  obscureText: obscureConfirmPassword,
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => onSubmit(),
+                  decoration: InputDecoration(
+                    labelText: 'Konfirmasi Password',
+                    hintText: 'Ulangi password',
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscureConfirmPassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                      ),
+                      onPressed: onToggleConfirmPassword,
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Konfirmasi password wajib diisi';
+                    }
+                    if (value != passwordController.text) {
+                      return 'Password tidak cocok';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 24),
                 SizedBox(
                   height: 52,
                   child: ElevatedButton(
@@ -121,23 +149,23 @@ class LoginForm extends StatelessWidget {
                               color: Colors.white,
                             ),
                           )
-                        : const Text('Masuk'),
+                        : const Text('Buat Akun'),
                   ),
                 ),
                 const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Belum punya akun? ', style: AppTextStyles.bodyMedium),
+                    Text('Sudah punya akun? ', style: AppTextStyles.bodyMedium),
                     TextButton(
-                      onPressed: onRegister,
+                      onPressed: onLogin,
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 4),
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                       child: Text(
-                        'Daftar',
+                        'Masuk',
                         style: AppTextStyles.bodyMedium.copyWith(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w600,

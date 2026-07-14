@@ -5,61 +5,42 @@ import 'package:sello/providers/auth_provider.dart';
 import 'package:sello/styles/app_colors.dart';
 import 'package:sello/widgets/common/app_safe_area.dart';
 import 'package:sello/widgets/common/app_snackbar.dart';
-import 'package:sello/widgets/features/login/login_form.dart';
 import 'package:sello/widgets/features/login/login_header.dart';
+import 'package:sello/widgets/features/login/register_form.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({
-    super.key,
-    this.initialEmail = '',
-    required this.onEmailChanged,
-    required this.onRegister,
-    required this.onForgotPassword,
-  });
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key, required this.onLogin});
 
-  final String initialEmail;
-  final ValueChanged<String> onEmailChanged;
-  final VoidCallback onRegister;
-  final VoidCallback onForgotPassword;
+  final VoidCallback onLogin;
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _emailController;
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _emailController = TextEditingController(text: widget.initialEmail);
-    _emailController.addListener(_handleEmailChanged);
-  }
-
-  void _handleEmailChanged() {
-    widget.onEmailChanged(_emailController.text.trim());
-  }
+  bool _obscureConfirmPassword = true;
 
   @override
   void dispose() {
-    _emailController
-      ..removeListener(_handleEmailChanged)
-      ..dispose();
+    _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
+  Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
-      await context.read<AuthProvider>().login(
+      await context.read<AuthProvider>().register(
             email: _emailController.text.trim(),
             password: _passwordController.text,
           );
@@ -68,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
       AppSnackbar.error(context, error.message);
     } catch (_) {
       if (!mounted) return;
-      AppSnackbar.error(context, 'Gagal masuk. Coba lagi.');
+      AppSnackbar.error(context, 'Gagal mendaftar. Coba lagi.');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -92,17 +73,21 @@ class _LoginScreenState extends State<LoginScreen> {
               const LoginHeader(),
               SizedBox(height: Responsive.isTablet(context) ? 40 : 32),
               Expanded(
-                child: LoginForm(
+                child: RegisterForm(
                   formKey: _formKey,
                   emailController: _emailController,
                   passwordController: _passwordController,
+                  confirmPasswordController: _confirmPasswordController,
                   obscurePassword: _obscurePassword,
+                  obscureConfirmPassword: _obscureConfirmPassword,
                   isLoading: _isLoading,
                   onTogglePassword: () =>
                       setState(() => _obscurePassword = !_obscurePassword),
-                  onSubmit: _handleLogin,
-                  onRegister: widget.onRegister,
-                  onForgotPassword: widget.onForgotPassword,
+                  onToggleConfirmPassword: () => setState(
+                    () => _obscureConfirmPassword = !_obscureConfirmPassword,
+                  ),
+                  onSubmit: _handleRegister,
+                  onLogin: widget.onLogin,
                 ),
               ),
             ],

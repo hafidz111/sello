@@ -261,7 +261,7 @@ File ini **tidak** ikut di-commit (sudah masuk `.gitignore`).
 - File konfigurasi: `lib/firebase_options.dart` (di-generate FlutterFire CLI).
 - Diinit di `main.dart` sebelum Supabase.
 - Auth dipakai di `AuthProvider` (email/password).
-- JWT Firebase dikirim ke Supabase (`accessToken`) agar RLS memakai `auth.uid()`.
+- JWT Firebase dikirim ke Supabase (`accessToken`) agar RLS memakai `auth.jwt()->>'sub'` (Firebase UID).
 - Di Dashboard Supabase: aktifkan **Third-party Auth → Firebase** dengan Project ID `sello-62633`.
   Detail: [`supabase/README.md`](supabase/README.md).
 - Regenerate opsi platform:

@@ -20,10 +20,13 @@ Cek status di **Supabase Dashboard → Database → Migrations**.
 |------|-----|
 | `20260710120000_products_and_sales.sql` | Tabel products, product_images, sales, bucket product-images, RLS dev |
 | `20260714120000_rls_per_user.sql` | RLS per-user (Firebase UID), bucket privat, policy storage |
+| `20260714184500_fix_requesting_user_id_jwt_sub.sql` | Perbaiki `requesting_user_id()`: pakai `auth.jwt()->>'sub'` (Firebase UID bukan UUID) |
 
 ## Firebase Auth + RLS (wajib)
 
-Auth aplikasi memakai **Firebase Auth**. Supabase memakai JWT Firebase supaya `auth.uid()` di RLS = Firebase UID.
+Auth aplikasi memakai **Firebase Auth**. Supabase memakai JWT Firebase supaya RLS mengenali pemakai lewat claim `sub` (Firebase UID).
+
+**Penting:** Jangan pakai `auth.uid()` di policy. Firebase UID bukan format UUID; gunakan `auth.jwt()->>'sub'` (sudah dibungkus di `public.requesting_user_id()`).
 
 ### Langkah di Dashboard Supabase
 

@@ -256,10 +256,31 @@ class ProductService {
 
   String _mapDbError(PostgrestException error) {
     final msg = error.message.toLowerCase();
-    if (msg.contains('relation') && msg.contains('does not exist')) {
+    final details = '${error.details ?? ''} ${error.hint ?? ''}'.toLowerCase();
+    final combined = '$msg $details ${error.code ?? ''}';
+
+    if (combined.contains('relation') && combined.contains('does not exist')) {
       return 'Tabel database belum dibuat. Push migrasi supabase/migrations/ ke GitHub.';
     }
-    if (msg.contains('row-level security') || msg.contains('rls')) {
+    if (combined.contains('22p02') ||
+        (combined.contains('invalid input syntax') &&
+            combined.contains('uuid'))) {
+      return 'Identitas pengguna tidak cocok dengan format database. '
+          'Pastikan migrasi perbaikan Firebase UID sudah diterapkan di Supabase.';
+    }
+    if (combined.contains('jwt') ||
+        combined.contains('unauthorized') ||
+        combined.contains('pgrst301') ||
+        error.code == 'PGRST301') {
+      return 'Sesi autentikasi ditolak database. Pastikan kamu sudah masuk '
+          'dan Firebase Auth sudah dihubungkan di Supabase '
+          '(Authentication → Third-party Auth → Firebase, Project ID sello-62633).';
+    }
+    if (combined.contains('row-level security') ||
+        combined.contains('rls') ||
+        combined.contains('42501') ||
+        combined.contains('permission denied') ||
+        combined.contains('violates row-level')) {
       return 'Akses data ditolak. Pastikan kamu sudah masuk dan '
           'integrasi Firebase Auth di Supabase sudah diaktifkan.';
     }

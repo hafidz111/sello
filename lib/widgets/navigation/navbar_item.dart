@@ -26,9 +26,9 @@ class NavBarItem extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeOutCubic,
-          margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 8),
           padding: EdgeInsets.symmetric(
-            horizontal: isActive ? (isTablet ? 12 : 8) : (isTablet ? 8 : 4),
+            horizontal: isActive ? (isTablet ? 10 : 6) : (isTablet ? 6 : 2),
             vertical: 6,
           ),
           decoration: BoxDecoration(
@@ -51,8 +51,8 @@ class NavBarItem extends StatelessWidget {
                 duration: const Duration(milliseconds: 250),
                 style: TextStyle(
                   fontSize: isActive
-                      ? (isTablet ? 12 : 11)
-                      : (isTablet ? 11 : 10),
+                      ? (isTablet ? 12 : 10)
+                      : (isTablet ? 11 : 9),
                   fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                   color: isActive
                       ? AppColors.navBarActive
@@ -66,6 +66,56 @@ class NavBarItem extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class NavBarCenterItem extends StatelessWidget {
+  const NavBarCenterItem({
+    super.key,
+    required this.item,
+    required this.isTablet,
+    required this.onTap,
+  });
+
+  final NavItem item;
+  final bool isTablet;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = isTablet ? 56.0 : 52.0;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                gradient: AppColors.primaryGradient,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.35),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Icon(
+                item.activeIcon,
+                color: AppColors.textOnPrimary,
+                size: isTablet ? 28 : 26,
+              ),
+            ),
+          ],
         ),
       ),
     );

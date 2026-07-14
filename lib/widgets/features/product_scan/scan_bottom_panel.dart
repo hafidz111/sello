@@ -156,7 +156,7 @@ class ScanBottomPanel extends StatelessWidget {
           ],
           const SizedBox(height: 8),
           Text(
-            '$catalogCount produk di katalog. Scan barcode ditambahkan terpisah.',
+            '$catalogCount produk di katalog. Arahkan kamera ke produk atau barcode.',
             style: AppTextStyles.bodySmall,
             textAlign: TextAlign.center,
           ),

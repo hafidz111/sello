@@ -18,10 +18,14 @@ Future<void> openFeature(BuildContext context, FeatureItem feature) async {
       context.read<NavigationProvider>().openCashier(mode: CashierMode.scan);
       return;
     case 'photo_to_content':
-      context.read<NavigationProvider>().setIndex(2);
+      context
+          .read<NavigationProvider>()
+          .setIndex(NavigationProvider.kontenIndex);
       return;
     case 'business_report':
-      context.read<NavigationProvider>().setIndex(3);
+      context
+          .read<NavigationProvider>()
+          .setIndex(NavigationProvider.laporanIndex);
       return;
     case 'digital_catalog':
       await Navigator.of(

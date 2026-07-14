@@ -4,8 +4,8 @@ import 'package:sello/core/utils/responsive.dart';
 import 'package:sello/models/nav_item.dart';
 import 'package:sello/providers/navigation_provider.dart';
 import 'package:sello/styles/app_colors.dart';
-
-import 'navbar_item.dart';
+import 'package:sello/widgets/navigation/cashier_mode_sheet.dart';
+import 'package:sello/widgets/navigation/navbar_item.dart';
 
 class FloatingBottomNav extends StatelessWidget {
   const FloatingBottomNav({super.key, required this.items});
@@ -49,11 +49,17 @@ class FloatingBottomNav extends StatelessWidget {
                 ),
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: List.generate(items.length, (index) {
                   final item = items[index];
-                  final isActive = currentIndex == index;
+                  if (item.isCenter) {
+                    return NavBarCenterItem(
+                      item: item,
+                      isTablet: isTablet,
+                      onTap: () => showCashierModeSheet(context),
+                    );
+                  }
 
+                  final isActive = currentIndex == index;
                   return NavBarItem(
                     item: item,
                     isActive: isActive,

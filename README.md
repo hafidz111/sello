@@ -164,6 +164,7 @@ Asisten WhatsApp **tidak** lagi bagian dari produk.
 | Firebase | Selesai | Auth + JWT ke Supabase. |
 | Layanan AI (Gemini) | Sebagian | Sale, match katalog, laporan, edukasi, terjemah. |
 | AdMob rewarded | Selesai | Gate Laporan paket Gratis. |
+| Notifikasi stok | Selesai | Lokal + FCM token. Ambang ≤5. Push server-side penuh belum. |
 
 ---
 
@@ -349,10 +350,12 @@ Jangan commit: `.env`, `android/key.properties`, `*.jks` / `*.keystore`.
 - [x] Terjemah & Ekspor
 - [x] Paket free/pro di `user_subscriptions`
 - [x] Auth Firebase + AdMob init
+- [x] Notifikasi stok menipis (lokal + token FCM)
 - [ ] Foto ke Konten
 - [ ] Mode offline & sinkronisasi
 - [ ] Barcode Code 128 / retail
 - [ ] Payment gateway
+- [ ] Push FCM server-side saat app tertutup
 - [ ] Pengujian (unit/widget/integration)
 
 ---

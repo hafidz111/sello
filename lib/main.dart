@@ -4,6 +4,7 @@ import 'package:sello/app.dart';
 import 'package:sello/core/config/env.dart';
 import 'package:sello/core/config/supabase_config.dart';
 import 'package:sello/firebase_options.dart';
+import 'package:sello/services/push_notification_service.dart';
 import 'package:sello/services/rewarded_ad_service.dart';
 
 Future<void> main() async {
@@ -12,5 +13,6 @@ Future<void> main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await SupabaseConfig.initialize();
   await RewardedAdService.instance.initialize();
+  await PushNotificationService.instance.initialize();
   runApp(const SelloApp());
 }

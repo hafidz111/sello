@@ -1,9 +1,11 @@
 import 'dart:typed_data';
 
 import 'package:sello/core/config/supabase_config.dart';
+import 'package:sello/core/constants/stock_constants.dart';
 import 'package:sello/models/dashboard_stats.dart';
 import 'package:sello/models/product.dart';
 import 'package:sello/models/product_image.dart';
+import 'package:sello/services/stock_alert_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProductException implements Exception {
@@ -164,8 +166,10 @@ class ProductService {
     }
 
     final total = product.price * quantity;
-    final newStock = product.stock - quantity;
+    final previousStock = product.stock;
+    final newStock = previousStock - quantity;
     final trimmedCustomer = customerName?.trim();
+    final clampedStock = newStock < 0 ? 0 : newStock;
 
     try {
       await _client.from('sales').insert({
@@ -181,16 +185,26 @@ class ProductService {
 
       await _client
           .from('products')
-          .update({'stock': newStock < 0 ? 0 : newStock})
+          .update({'stock': clampedStock})
           .eq('id', product.id);
     } on PostgrestException catch (e) {
       throw ProductException(_mapDbError(e));
     } catch (_) {
       throw const ProductException('Gagal mencatat penjualan. Coba lagi.');
     }
-  }
 
-  static const _lowStockThreshold = 5;
+    try {
+      await StockAlertService.instance.notifyIfLowAfterSale(
+        userId: userId,
+        productId: product.id,
+        productName: product.name,
+        previousStock: previousStock,
+        newStock: clampedStock,
+      );
+    } catch (_) {
+      // Penjualan sudah tersimpan; notifikasi gagal tidak membatalkan transaksi.
+    }
+  }
 
   Product? findById(List<Product> catalog, String? productId) {
     if (productId == null) return null;
@@ -222,7 +236,7 @@ class ProductService {
       }
 
       final lowStock = products
-          .where((p) => p.stock <= _lowStockThreshold)
+          .where((p) => p.stock <= StockConstants.lowStockThreshold)
           .length;
 
       return DashboardStats(

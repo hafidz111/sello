@@ -23,6 +23,15 @@ Cek status di **Supabase Dashboard → Database → Migrations**.
 | `20260714140000_sales_profit_customer.sql` | `cost_price`, `unit_cost`, `customer_name` untuk laba & pelanggan |
 | `20260714184500_fix_requesting_user_id_jwt_sub.sql` | Perbaiki `requesting_user_id()`: pakai `auth.jwt()->>'sub'` (Firebase UID bukan UUID) |
 | `20260716190000_user_subscriptions.sql` | Tabel `user_subscriptions` (plan `free`/`pro`) + RLS per user |
+| `20260716193000_device_tokens.sql` | Token FCM perangkat untuk push notifikasi (stok menipis) |
+
+## Notifikasi stok menipis
+
+- Ambang: stok ≤ **5** (`StockConstants.lowStockThreshold`)
+- Setelah penjualan: notifikasi lokal per produk (maks 1x/hari per produk)
+- Saat login: ringkasan produk stok menipis (maks 1x/hari)
+- Token FCM disimpan di `device_tokens` (siap push server-side nanti)
+- Izinkan notifikasi di HP saat diminta app
 
 ## Debug paket Gratis / Pro (production)
 

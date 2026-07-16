@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:sello/core/utils/responsive.dart';
 import 'package:sello/models/product.dart';
 import 'package:sello/providers/auth_provider.dart';
+import 'package:sello/screens/features/product_detail_screen.dart';
 import 'package:sello/screens/features/product_register_screen.dart';
 import 'package:sello/services/product_service.dart';
 import 'package:sello/styles/app_colors.dart';
@@ -58,6 +59,15 @@ class _ProductListScreenState extends State<ProductListScreen> {
     if (created == true) await _loadProducts();
   }
 
+  Future<void> _openDetail(Product product) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ProductDetailScreen(productId: product.id),
+      ),
+    );
+    if (mounted) await _loadProducts();
+  }
+
   @override
   Widget build(BuildContext context) {
     final padding = Responsive.horizontalPadding(context);
@@ -87,7 +97,11 @@ class _ProductListScreenState extends State<ProductListScreen> {
                 itemCount: _products.length,
                 separatorBuilder: (_, _) => const SizedBox(height: 10),
                 itemBuilder: (context, index) {
-                  return ProductListTile(product: _products[index]);
+                  final product = _products[index];
+                  return ProductListTile(
+                    product: product,
+                    onTap: () => _openDetail(product),
+                  );
                 },
               ),
             ),

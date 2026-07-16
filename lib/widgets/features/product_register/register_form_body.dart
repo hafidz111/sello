@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:sello/services/product_service.dart';
 import 'package:sello/styles/app_colors.dart';
 import 'package:sello/styles/app_text_styles.dart';
+import 'package:sello/widgets/common/overwrite_zero_number_field.dart';
 import 'package:sello/widgets/features/product_register/register_photo_slot.dart';
 
 class RegisterFormBody extends StatelessWidget {
@@ -60,21 +61,18 @@ class RegisterFormBody extends StatelessWidget {
           decoration: _inputDecoration('Nama produk', 'Contoh: Keripik singkong pedas'),
         ),
         const SizedBox(height: 12),
-        TextField(
+        OverwriteZeroNumberField(
           controller: priceController,
-          keyboardType: TextInputType.number,
           decoration: _inputDecoration('Harga jual (Rp)', '10000'),
         ),
         const SizedBox(height: 12),
-        TextField(
+        OverwriteZeroNumberField(
           controller: costController,
-          keyboardType: TextInputType.number,
           decoration: _inputDecoration('Harga modal / HPP (Rp)', '7000'),
         ),
         const SizedBox(height: 12),
-        TextField(
+        OverwriteZeroNumberField(
           controller: stockController,
-          keyboardType: TextInputType.number,
           decoration: _inputDecoration('Stok awal (pcs)', '50'),
         ),
         const SizedBox(height: 20),

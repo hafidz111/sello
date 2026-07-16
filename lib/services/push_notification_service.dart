@@ -4,6 +4,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:sello/core/config/supabase_config.dart';
+import 'package:sello/core/utils/app_navigator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Inisialisasi FCM + notifikasi lokal, dan simpan token ke Supabase.
@@ -20,6 +21,8 @@ class PushNotificationService {
   final _local = FlutterLocalNotificationsPlugin();
 
   bool _initialized = false;
+  bool _canNavigate = false;
+  String? _pendingPayload;
   int _notificationId = 1000;
 
   Future<void> initialize() async {
@@ -33,7 +36,13 @@ class PushNotificationService {
     );
     await _local.initialize(
       settings: const InitializationSettings(android: androidInit, iOS: iosInit),
+      onDidReceiveNotificationResponse: _onNotificationResponse,
     );
+
+    final launch = await _local.getNotificationAppLaunchDetails();
+    if (launch?.didNotificationLaunchApp == true) {
+      _pendingPayload = launch!.notificationResponse?.payload;
+    }
 
     final androidPlugin = _local
         .resolvePlatformSpecificImplementation<
@@ -57,12 +66,49 @@ class PushNotificationService {
     FirebaseMessaging.onMessage.listen((message) {
       final title = message.notification?.title ?? message.data['title'];
       final body = message.notification?.body ?? message.data['body'];
+      final productId = message.data['product_id'];
       if (title is String && body is String) {
-        showLocalNotification(title: title, body: body);
+        showLocalNotification(
+          title: title,
+          body: body,
+          payload: productId is String && productId.isNotEmpty
+              ? AppNavigator.productPayload(productId)
+              : null,
+        );
+      }
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((message) {
+      final productId = message.data['product_id'];
+      if (productId is String && productId.isNotEmpty) {
+        _routeOrQueue(AppNavigator.productPayload(productId));
       }
     });
 
     _initialized = true;
+  }
+
+  /// Panggil setelah user login & navigator siap.
+  void enableNavigationAndFlush() {
+    _canNavigate = true;
+    final pending = _pendingPayload;
+    _pendingPayload = null;
+    if (pending != null) {
+      AppNavigator.handleNotificationPayload(pending);
+    }
+  }
+
+  void _onNotificationResponse(NotificationResponse response) {
+    _routeOrQueue(response.payload);
+  }
+
+  void _routeOrQueue(String? payload) {
+    if (payload == null || payload.isEmpty) return;
+    if (_canNavigate && AppNavigator.key.currentState != null) {
+      AppNavigator.handleNotificationPayload(payload);
+    } else {
+      _pendingPayload = payload;
+    }
   }
 
   Future<bool> requestPermission() async {
@@ -130,6 +176,7 @@ class PushNotificationService {
   Future<void> showLocalNotification({
     required String title,
     required String body,
+    String? payload,
   }) async {
     await initialize();
     _notificationId += 1;
@@ -138,6 +185,7 @@ class PushNotificationService {
       id: _notificationId,
       title: title,
       body: body,
+      payload: payload,
       notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           _channelId,

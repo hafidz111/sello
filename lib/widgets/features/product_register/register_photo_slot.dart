@@ -8,16 +8,20 @@ class RegisterPhotoSlot extends StatelessWidget {
   const RegisterPhotoSlot({
     super.key,
     required this.label,
-    required this.bytes,
     required this.onTap,
+    this.bytes,
+    this.networkUrl,
   });
 
   final String label;
   final Uint8List? bytes;
+  final String? networkUrl;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
+    final hasImage = bytes != null || (networkUrl != null && networkUrl!.isNotEmpty);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Material(
@@ -32,13 +36,26 @@ class RegisterPhotoSlot extends StatelessWidget {
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: AppColors.border),
             ),
-            child: bytes != null
+            child: hasImage
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(13),
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        Image.memory(bytes!, fit: BoxFit.cover),
+                        if (bytes != null)
+                          Image.memory(bytes!, fit: BoxFit.cover)
+                        else
+                          Image.network(
+                            networkUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => const ColoredBox(
+                              color: AppColors.surfaceVariant,
+                              child: Icon(
+                                Icons.broken_image_outlined,
+                                color: AppColors.textHint,
+                              ),
+                            ),
+                          ),
                         Positioned(
                           left: 0,
                           right: 0,
@@ -61,7 +78,10 @@ class RegisterPhotoSlot extends StatelessWidget {
                 : Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.add_a_photo_rounded, color: AppColors.primary),
+                      const Icon(
+                        Icons.add_a_photo_rounded,
+                        color: AppColors.primary,
+                      ),
                       const SizedBox(height: 6),
                       Text(label, style: AppTextStyles.bodySmall),
                     ],

@@ -74,6 +74,192 @@ class ProductService {
     }
   }
 
+  Future<Product?> fetchProductById({
+    required String userId,
+    required String productId,
+  }) async {
+    try {
+      final row = await _client
+          .from('products')
+          .select('*, product_images(*)')
+          .eq('user_id', userId)
+          .eq('id', productId)
+          .maybeSingle();
+
+      if (row == null) return null;
+      final product = Product.fromJson(row);
+      return product.copyWith(images: await _withSignedUrls(product));
+    } on PostgrestException catch (e) {
+      throw ProductException(_mapDbError(e));
+    } catch (_) {
+      throw const ProductException('Gagal memuat detail produk.');
+    }
+  }
+
+  Future<Product> updateProduct({
+    required String userId,
+    required String productId,
+    required String name,
+    required int price,
+    required int costPrice,
+    required int stock,
+    Map<String, Uint8List> newImagesByAngle = const {},
+  }) async {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) {
+      throw const ProductException('Nama produk wajib diisi.');
+    }
+    if (price < 0 || costPrice < 0 || stock < 0) {
+      throw const ProductException(
+        'Harga jual, modal, dan stok tidak boleh negatif.',
+      );
+    }
+
+    try {
+      await _client
+          .from('products')
+          .update({
+            'name': trimmed,
+            'price': price,
+            'cost_price': costPrice,
+            'stock': stock,
+          })
+          .eq('id', productId)
+          .eq('user_id', userId);
+
+      if (newImagesByAngle.isNotEmpty) {
+        final existing = await _client
+            .from('product_images')
+            .select('id, angle_label, sort_order')
+            .eq('product_id', productId);
+
+        final byAngle = <String, Map<String, dynamic>>{};
+        for (final row in existing as List) {
+          if (row is Map<String, dynamic>) {
+            final angle = row['angle_label'] as String?;
+            if (angle != null) byAngle[angle] = row;
+          }
+        }
+
+        var nextSort = byAngle.values.fold<int>(
+          0,
+          (max, row) {
+            final order = (row['sort_order'] as num?)?.toInt() ?? 0;
+            return order >= max ? order + 1 : max;
+          },
+        );
+
+        for (final entry in newImagesByAngle.entries) {
+          final angle = entry.key;
+          final bytes = entry.value;
+          final path = '$userId/$productId/$angle.jpg';
+
+          await _client.storage
+              .from(_bucket)
+              .uploadBinary(
+                path,
+                bytes,
+                fileOptions: const FileOptions(
+                  contentType: 'image/jpeg',
+                  upsert: true,
+                ),
+              );
+
+          final current = byAngle[angle];
+          if (current != null) {
+            await _client
+                .from('product_images')
+                .update({
+                  'storage_path': path,
+                  'angle_label': angle,
+                })
+                .eq('id', current['id']);
+          } else {
+            await _client.from('product_images').insert({
+              'product_id': productId,
+              'storage_path': path,
+              'angle_label': angle,
+              'sort_order': nextSort,
+            });
+            nextSort++;
+          }
+        }
+      }
+
+      final updated = await fetchProductById(
+        userId: userId,
+        productId: productId,
+      );
+      if (updated == null) {
+        throw const ProductException('Produk tidak ditemukan setelah diubah.');
+      }
+      return updated;
+    } on ProductException {
+      rethrow;
+    } on StorageException {
+      throw const ProductException(
+        'Gagal mengunggah foto produk. Coba lagi nanti.',
+      );
+    } on PostgrestException catch (e) {
+      throw ProductException(_mapDbError(e));
+    } catch (_) {
+      throw const ProductException('Gagal memperbarui produk. Coba lagi.');
+    }
+  }
+
+  Future<void> deleteProduct({
+    required String userId,
+    required String productId,
+  }) async {
+    try {
+      final sales = await _client
+          .from('sales')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('product_id', productId)
+          .limit(1);
+
+      if ((sales as List).isNotEmpty) {
+        throw const ProductException(
+          'Produk tidak bisa dihapus karena sudah ada di catatan penjualan. '
+          'Kamu masih bisa mengubah data atau stoknya.',
+        );
+      }
+
+      final images = await _client
+          .from('product_images')
+          .select('storage_path')
+          .eq('product_id', productId);
+
+      final paths = (images as List)
+          .whereType<Map<String, dynamic>>()
+          .map((row) => row['storage_path'] as String?)
+          .whereType<String>()
+          .where((path) => path.isNotEmpty)
+          .toList();
+
+      if (paths.isNotEmpty) {
+        try {
+          await _client.storage.from(_bucket).remove(paths);
+        } on StorageException {
+          // Lanjut hapus baris produk meskipun file storage gagal dibersihkan.
+        }
+      }
+
+      await _client
+          .from('products')
+          .delete()
+          .eq('id', productId)
+          .eq('user_id', userId);
+    } on ProductException {
+      rethrow;
+    } on PostgrestException catch (e) {
+      throw ProductException(_mapDbError(e));
+    } catch (_) {
+      throw const ProductException('Gagal menghapus produk. Coba lagi.');
+    }
+  }
+
   Future<Product> createProduct({
     required String userId,
     required String name,

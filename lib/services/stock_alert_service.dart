@@ -1,5 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sello/core/constants/stock_constants.dart';
+import 'package:sello/core/utils/app_navigator.dart';
 import 'package:sello/models/product.dart';
 import 'package:sello/services/push_notification_service.dart';
 
@@ -35,6 +36,7 @@ class StockAlertService {
       body: safeStock == 0
           ? '$productName habis. Segera isi ulang stok.'
           : '$productName sisa $safeStock. Segera isi ulang sebelum kehabisan.',
+      payload: AppNavigator.productPayload(productId),
     );
     await _markNotifiedToday(userId: userId, productId: productId);
   }
@@ -60,10 +62,12 @@ class StockAlertService {
 
     final names = low.take(3).map((p) => p.name).join(', ');
     final extra = low.length > 3 ? ' dan ${low.length - 3} lainnya' : '';
+    final targetId = low.first.id;
 
     await _notifications.showLocalNotification(
       title: 'Ada ${low.length} produk stok menipis',
-      body: '$names$extra. Cek katalog untuk isi ulang.',
+      body: '$names$extra. Ketuk untuk membuka produk.',
+      payload: AppNavigator.productPayload(targetId),
     );
     await prefs.setBool(summaryKey, true);
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sello/core/constants/app_constants.dart';
+import 'package:sello/core/utils/app_navigator.dart';
 import 'package:sello/providers/auth_provider.dart';
 import 'package:sello/providers/dashboard_provider.dart';
 import 'package:sello/providers/education_provider.dart';
@@ -32,6 +33,7 @@ class SelloApp extends StatelessWidget {
         title: AppConstants.appName,
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,
+        navigatorKey: AppNavigator.key,
         home: const _AuthGate(),
       ),
     );
@@ -80,6 +82,7 @@ class _LoggedInShellState extends State<_LoggedInShell> {
     context.read<SubscriptionProvider>().load(userId);
 
     await PushNotificationService.instance.registerTokenForUser(userId);
+    PushNotificationService.instance.enableNavigationAndFlush();
 
     try {
       final products = await ProductService.instance.fetchProducts(userId);

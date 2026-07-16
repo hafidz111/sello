@@ -23,15 +23,6 @@ abstract final class FeatureData {
       route: '/content',
     ),
     FeatureItem(
-      id: 'whatsapp_assistant',
-      title: 'Asisten WhatsApp',
-      description:
-          'Chatbot AI merespons FAQ, cek stok & proses order via WhatsApp Business.',
-      icon: Icons.chat_rounded,
-      color: Color(0xFF22C55E),
-      route: '/whatsapp',
-    ),
-    FeatureItem(
       id: 'business_report',
       title: 'Laporan Bisnis',
       description:
@@ -61,7 +52,7 @@ abstract final class FeatureData {
       id: 'offline_mode',
       title: 'Mode Offline',
       description:
-          'Pencatatan transaksi tanpa internet, sinkron otomatis saat online.',
+          'Pencatatan offline dasar (paket Gratis). Sinkron otomatis saat online.',
       icon: Icons.cloud_off_rounded,
       color: Color(0xFF64748B),
       route: '/offline',

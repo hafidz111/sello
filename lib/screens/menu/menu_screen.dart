@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sello/core/utils/responsive.dart';
 import 'package:sello/providers/auth_provider.dart';
+import 'package:sello/providers/subscription_provider.dart';
 import 'package:sello/screens/features/education_screen.dart';
+import 'package:sello/screens/features/pricing_screen.dart';
 import 'package:sello/screens/features/product_list_screen.dart';
 import 'package:sello/screens/features/translate_export_screen.dart';
 import 'package:sello/styles/app_colors.dart';
@@ -31,10 +33,17 @@ class MenuScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _openPricing(BuildContext context) {
+    return Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const PricingScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final padding = Responsive.horizontalPadding(context);
     final auth = context.watch<AuthProvider>();
+    final subscription = context.watch<SubscriptionProvider>();
     final userName = auth.userName ?? 'Pengguna';
     final userEmail = auth.userEmail ?? '-';
     final bottomPad = Responsive.bottomScrollPadding(context);
@@ -88,8 +97,21 @@ class MenuScreen extends StatelessWidget {
             child: _MenuSection(
               title: 'Akun',
               children: [
-                _AccountCard(userName: userName, userEmail: userEmail),
+                _AccountCard(
+                  userName: userName,
+                  userEmail: userEmail,
+                  planLabel: subscription.currentPlan.label,
+                  isPro: subscription.isPro,
+                ),
                 const SizedBox(height: 12),
+                _MenuTile(
+                  icon: Icons.workspace_premium_rounded,
+                  color: const Color(0xFFF59E0B),
+                  title: 'Paket & Harga',
+                  subtitle: 'Lihat paket Gratis dan Pro (uji coba)',
+                  onTap: () => _openPricing(context),
+                ),
+                const SizedBox(height: 2),
                 const LogoutButton(),
               ],
             ),
@@ -102,23 +124,13 @@ class MenuScreen extends StatelessWidget {
               title: 'Lainnya',
               children: [
                 _MenuTile(
-                  icon: Icons.chat_rounded,
-                  color: const Color(0xFF22C55E),
-                  title: 'Asisten WhatsApp',
-                  subtitle: 'Balas pertanyaan pelanggan secara otomatis',
-                  onTap: () => AppSnackbar.info(
-                    context,
-                    'Asisten WhatsApp segera hadir.',
-                  ),
-                ),
-                _MenuTile(
                   icon: Icons.cloud_off_rounded,
                   color: const Color(0xFF64748B),
                   title: 'Mode Offline',
-                  subtitle: 'Catat transaksi meski tanpa internet',
+                  subtitle: 'Termasuk paket Gratis. Penyimpanan lokal segera hadir',
                   onTap: () => AppSnackbar.info(
                     context,
-                    'Mode Offline segera hadir.',
+                    'Mode Offline dasar segera hadir di paket Gratis.',
                   ),
                 ),
                 _MenuTile(
@@ -234,10 +246,14 @@ class _AccountCard extends StatelessWidget {
   const _AccountCard({
     required this.userName,
     required this.userEmail,
+    required this.planLabel,
+    required this.isPro,
   });
 
   final String userName;
   final String userEmail;
+  final String planLabel;
+  final bool isPro;
 
   @override
   Widget build(BuildContext context) {
@@ -272,6 +288,22 @@ class _AccountCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(userEmail, style: AppTextStyles.bodySmall),
               ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: isPro
+                  ? AppColors.primaryContainer
+                  : AppColors.surfaceVariant,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              planLabel,
+              style: AppTextStyles.labelMedium.copyWith(
+                color: isPro ? AppColors.primary : AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],

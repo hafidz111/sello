@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:sello/core/utils/responsive.dart';
 import 'package:sello/providers/auth_provider.dart';
 import 'package:sello/providers/education_provider.dart';
+import 'package:sello/providers/subscription_provider.dart';
 import 'package:sello/styles/app_colors.dart';
 import 'package:sello/styles/app_text_styles.dart';
 import 'package:sello/widgets/common/app_snackbar.dart';
@@ -24,10 +25,13 @@ class _EducationScreenState extends State<EducationScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
   }
 
+  int get _educationDailyLimit =>
+      context.read<SubscriptionProvider>().currentPlan.educationDailyLimit;
+
   Future<void> _load() async {
     final userId = context.read<AuthProvider>().userId;
     final provider = context.read<EducationProvider>();
-    await provider.load(userId);
+    await provider.load(userId, dailyLimit: _educationDailyLimit);
     if (!mounted) return;
     if (provider.errorMessage != null) {
       AppSnackbar.error(context, provider.errorMessage!);
@@ -38,7 +42,7 @@ class _EducationScreenState extends State<EducationScreen> {
   Future<void> _changeTips() async {
     final userId = context.read<AuthProvider>().userId;
     final provider = context.read<EducationProvider>();
-    await provider.changeTips(userId);
+    await provider.changeTips(userId, dailyLimit: _educationDailyLimit);
     if (!mounted) return;
 
     if (provider.errorMessage != null) {
@@ -56,6 +60,7 @@ class _EducationScreenState extends State<EducationScreen> {
   Widget build(BuildContext context) {
     final padding = Responsive.horizontalPadding(context);
     final state = context.watch<EducationProvider>();
+    final isPro = context.watch<SubscriptionProvider>().isPro;
     final guide = state.guide;
     final quota = state.quota;
 
@@ -76,9 +81,21 @@ class _EducationScreenState extends State<EducationScreen> {
           ),
           const SizedBox(height: 8),
           Text(
+            isPro
+                ? 'Paket Pro: hingga ${quota.limit} tips per hari.'
+                : 'Paket Gratis: terbatas ${quota.limit} tips per hari.',
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
             quota.statusLabel,
             style: AppTextStyles.bodySmall.copyWith(
-              color: quota.isExhausted ? AppColors.warning : AppColors.textSecondary,
+              color: quota.isExhausted
+                  ? AppColors.warning
+                  : AppColors.textSecondary,
               fontWeight: FontWeight.w600,
             ),
           ),

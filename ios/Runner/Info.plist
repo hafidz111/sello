@@ -53,6 +53,8 @@
 	<string>Mikrofon dipakai untuk mencatat penjualan lewat suara.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Pengenalan suara dipakai untuk mengubah ucapan menjadi catatan penjualan.</string>
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-4122766238215136~5990475654</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

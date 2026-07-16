@@ -6,6 +6,7 @@ import 'package:sello/providers/dashboard_provider.dart';
 import 'package:sello/providers/education_provider.dart';
 import 'package:sello/providers/navigation_provider.dart';
 import 'package:sello/providers/report_provider.dart';
+import 'package:sello/providers/subscription_provider.dart';
 import 'package:sello/screens/auth/auth_shell.dart';
 import 'package:sello/screens/shell/main_shell.dart';
 import 'package:sello/styles/app_theme.dart';
@@ -22,6 +23,7 @@ class SelloApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
         ChangeNotifierProvider(create: (_) => ReportProvider()),
         ChangeNotifierProvider(create: (_) => EducationProvider()),
+        ChangeNotifierProvider(create: (_) => SubscriptionProvider()),
       ],
       child: MaterialApp(
         title: AppConstants.appName,
@@ -69,6 +71,7 @@ class _LoggedInShellState extends State<_LoggedInShell> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userId = context.read<AuthProvider>().userId;
       context.read<DashboardProvider>().load(userId);
+      context.read<SubscriptionProvider>().load(userId);
     });
   }
 

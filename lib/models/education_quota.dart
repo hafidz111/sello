@@ -4,7 +4,10 @@ class EducationQuota {
     required this.limit,
   });
 
+  /// Default Pro / legacy.
   static const dailyLimit = 3;
+  static const freeDailyLimit = 1;
+  static const proDailyLimit = 3;
 
   final int used;
   final int limit;

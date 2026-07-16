@@ -5,7 +5,10 @@ import 'package:sello/services/education_service.dart';
 
 class EducationProvider extends ChangeNotifier {
   EducationGuide? _guide;
-  EducationQuota _quota = const EducationQuota(used: 0, limit: EducationQuota.dailyLimit);
+  EducationQuota _quota = const EducationQuota(
+    used: 0,
+    limit: EducationQuota.freeDailyLimit,
+  );
   bool _isLoading = false;
   String? _errorMessage;
   String? _infoMessage;
@@ -17,19 +20,25 @@ class EducationProvider extends ChangeNotifier {
   String? get infoMessage => _infoMessage;
   bool get canChangeTips => _quota.canGenerate && !_isLoading;
 
-  Future<void> load(String userId) async {
+  Future<void> load(String userId, {required int dailyLimit}) async {
     _isLoading = true;
     _errorMessage = null;
     _infoMessage = null;
     notifyListeners();
 
     try {
-      final result = await EducationService.instance.loadCachedOrInitial(userId);
+      final result = await EducationService.instance.loadCachedOrInitial(
+        userId,
+        dailyLimit: dailyLimit,
+      );
       _guide = result.guide;
       _quota = result.quota;
     } on EducationException catch (e) {
       _errorMessage = e.message;
-      _quota = await EducationService.instance.getQuota(userId);
+      _quota = await EducationService.instance.getQuota(
+        userId,
+        dailyLimit: dailyLimit,
+      );
     } catch (_) {
       _errorMessage = 'Gagal memuat edukasi. Coba lagi nanti.';
     }
@@ -38,7 +47,7 @@ class EducationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> changeTips(String userId) async {
+  Future<void> changeTips(String userId, {required int dailyLimit}) async {
     if (!_quota.canGenerate) {
       _infoMessage = _quota.statusLabel;
       notifyListeners();
@@ -51,13 +60,19 @@ class EducationProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await EducationService.instance.regenerate(userId);
+      final result = await EducationService.instance.regenerate(
+        userId,
+        dailyLimit: dailyLimit,
+      );
       _guide = result.guide;
       _quota = result.quota;
       _infoMessage = _quota.statusLabel;
     } on EducationException catch (e) {
       _errorMessage = e.message;
-      _quota = await EducationService.instance.getQuota(userId);
+      _quota = await EducationService.instance.getQuota(
+        userId,
+        dailyLimit: dailyLimit,
+      );
     } catch (_) {
       _errorMessage = 'Gagal mengganti tips. Coba lagi nanti.';
     }

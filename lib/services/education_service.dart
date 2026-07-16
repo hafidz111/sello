@@ -32,20 +32,27 @@ class EducationService {
 
   static final EducationService instance = EducationService._();
 
-  static const _dailyLimit = EducationQuota.dailyLimit;
+  static const _defaultDailyLimit = EducationQuota.proDailyLimit;
 
   final _reportService = ReportService.instance;
   final _productService = ProductService.instance;
   final _aiService = AiService.instance;
 
-  Future<EducationQuota> getQuota(String userId) async {
+  Future<EducationQuota> getQuota(
+    String userId, {
+    int dailyLimit = _defaultDailyLimit,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     final used = prefs.getInt(_usageKey(userId)) ?? 0;
-    return EducationQuota(used: used.clamp(0, _dailyLimit), limit: _dailyLimit);
+    final limit = dailyLimit.clamp(1, 99);
+    return EducationQuota(used: used.clamp(0, limit), limit: limit);
   }
 
   /// Muat tips hari ini tanpa menambah kuota (pakai cache bila ada).
-  Future<EducationLoadResult> loadCachedOrInitial(String userId) async {
+  Future<EducationLoadResult> loadCachedOrInitial(
+    String userId, {
+    int dailyLimit = _defaultDailyLimit,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     await _resetIfNewDay(prefs, userId);
 
@@ -53,28 +60,32 @@ class EducationService {
     if (cached != null) {
       return EducationLoadResult(
         guide: cached,
-        quota: await getQuota(userId),
+        quota: await getQuota(userId, dailyLimit: dailyLimit),
       );
     }
 
     // Belum ada tips hari ini: generate sekali dan hitung 1 kuota.
-    return regenerate(userId);
+    return regenerate(userId, dailyLimit: dailyLimit);
   }
 
-  /// Ganti tips (tombol). Maksimal 3x per hari.
-  Future<EducationLoadResult> regenerate(String userId) async {
+  /// Ganti tips (tombol). Batas mengikuti paket (Gratis 1x, Pro 3x).
+  Future<EducationLoadResult> regenerate(
+    String userId, {
+    int dailyLimit = _defaultDailyLimit,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     await _resetIfNewDay(prefs, userId);
 
+    final limit = dailyLimit.clamp(1, 99);
     final used = prefs.getInt(_usageKey(userId)) ?? 0;
-    if (used >= _dailyLimit) {
+    if (used >= limit) {
       final cached = _readCachedGuide(prefs, userId);
       throw EducationException(
         cached == null
-            ? 'Batas harian tips edukasi sudah habis ($used/$_dailyLimit). '
-                'Coba lagi besok.'
-            : 'Batas ganti tips hari ini sudah habis ($used/$_dailyLimit). '
-                'Tips saat ini tetap bisa dibaca. Coba lagi besok.',
+            ? 'Batas harian tips edukasi sudah habis ($used/$limit). '
+                'Coba lagi besok atau upgrade ke Pro.'
+            : 'Batas ganti tips hari ini sudah habis ($used/$limit). '
+                'Tips saat ini tetap bisa dibaca. Coba lagi besok atau upgrade ke Pro.',
       );
     }
 
@@ -86,7 +97,7 @@ class EducationService {
 
     return EducationLoadResult(
       guide: guide,
-      quota: EducationQuota(used: nextUsed, limit: _dailyLimit),
+      quota: EducationQuota(used: nextUsed, limit: limit),
     );
   }
 

@@ -22,6 +22,37 @@ Cek status di **Supabase Dashboard → Database → Migrations**.
 | `20260714120000_rls_per_user.sql` | RLS per-user (Firebase UID), bucket privat, policy storage |
 | `20260714140000_sales_profit_customer.sql` | `cost_price`, `unit_cost`, `customer_name` untuk laba & pelanggan |
 | `20260714184500_fix_requesting_user_id_jwt_sub.sql` | Perbaiki `requesting_user_id()`: pakai `auth.jwt()->>'sub'` (Firebase UID bukan UUID) |
+| `20260716190000_user_subscriptions.sql` | Tabel `user_subscriptions` (plan `free`/`pro`) + RLS per user |
+
+## Debug paket Gratis / Pro (production)
+
+Paket tersimpan di tabel **`user_subscriptions`**.
+
+1. Buka **Supabase Dashboard → Table Editor → `user_subscriptions`**
+2. Cari baris `user_id` = Firebase UID akun (lihat di Firebase Auth / chip login)
+3. Ubah kolom **`plan`**:
+   - `free` = paket dasar (ada iklan/blur di Laporan)
+   - `pro` = tanpa iklan
+4. Di app: tutup–buka ulang atau logout–login supaya `SubscriptionProvider` memuat ulang
+
+Atau lewat **SQL Editor**:
+
+```sql
+-- Jadikan Pro (ganti UID)
+update public.user_subscriptions
+set plan = 'pro', updated_at = now()
+where user_id = 'FIREBASE_UID_DISINI';
+
+-- Kembalikan ke Gratis
+update public.user_subscriptions
+set plan = 'free', updated_at = now()
+where user_id = 'FIREBASE_UID_DISINI';
+
+-- Lihat semua
+select user_id, plan, updated_at from public.user_subscriptions order by updated_at desc;
+```
+
+Catatan: update langsung di Dashboard memakai role service dan tidak terhalang RLS user. App sendiri hanya bisa ubah baris milik sendiri.
 
 ## Firebase Auth + RLS (wajib)
 

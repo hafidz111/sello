@@ -78,7 +78,7 @@ class EducationChangeTipsButton extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       isExhausted
-                          ? 'Kembali lagi besok ya'
+                          ? 'Upgrade ke Pro atau coba lagi besok'
                           : 'Dapatkan insight lain untuk tokomu',
                       style: AppTextStyles.bodySmall.copyWith(
                         color: enabled

@@ -26,9 +26,9 @@ class CashierHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Beranda POS', style: AppTextStyles.titleLarge),
+              Text('Kasir POS', style: AppTextStyles.titleLarge),
               Text(
-                'Catat penjualan lewat suara atau scan produk',
+                'Pilih produk, catat penjualan, lihat laporan hari ini',
                 style: AppTextStyles.bodySmall,
               ),
             ],

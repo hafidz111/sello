@@ -13,16 +13,19 @@ class CashierVoicePanel extends StatelessWidget {
     super.key,
     required this.status,
     required this.onMicTap,
+    this.isAiConfigured = true,
   });
 
   final CashierVoiceStatus status;
   final VoidCallback onMicTap;
+  final bool isAiConfigured;
 
   @override
   Widget build(BuildContext context) {
     final isListening = status == CashierVoiceStatus.listening;
     final isProcessing = status == CashierVoiceStatus.processing;
     final isBusy = isListening || isProcessing;
+    final canUseMic = isAiConfigured && !isBusy;
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
@@ -40,14 +43,21 @@ class CashierVoicePanel extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           GestureDetector(
-            onTap: isBusy ? null : onMicTap,
+            onTap: canUseMic ? onMicTap : null,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               width: 88,
               height: 88,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: isListening
+                gradient: !isAiConfigured
+                    ? LinearGradient(
+                        colors: [
+                          AppColors.textHint,
+                          AppColors.textHint.withValues(alpha: 0.7),
+                        ],
+                      )
+                    : isListening
                     ? const LinearGradient(
                         colors: [Color(0xFFEF4444), Color(0xFFF97316)],
                       )
@@ -77,7 +87,11 @@ class CashierVoicePanel extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            isBusy ? 'Tunggu sebentar...' : 'Ketuk mikrofon untuk mulai',
+            !isAiConfigured
+                ? 'GEMINI_API_KEY belum diisi. Pakai mode Manual dulu.'
+                : isBusy
+                ? 'Tunggu sebentar...'
+                : 'Ketuk mikrofon untuk mulai',
             style: AppTextStyles.bodySmall.copyWith(color: AppColors.textHint),
             textAlign: TextAlign.center,
           ),
@@ -87,6 +101,9 @@ class CashierVoicePanel extends StatelessWidget {
   }
 
   String get _statusLabel {
+    if (!isAiConfigured) {
+      return 'Mode suara butuh GEMINI_API_KEY di file .env';
+    }
     return switch (status) {
       CashierVoiceStatus.idle =>
         'Ucapkan penjualan singkat, mis. "jual 3 kopi". Nama akan dicocokkan ke katalog.',

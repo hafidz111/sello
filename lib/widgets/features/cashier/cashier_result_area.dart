@@ -30,9 +30,11 @@ class CashierResultArea extends StatelessWidget {
   final VoidCallback onClear;
   final VoidCallback onSave;
 
+  bool get _isEmpty => items.isEmpty && !isLoading;
+
   @override
   Widget build(BuildContext context) {
-    if (items.isEmpty && !isLoading) {
+    if (_isEmpty) {
       return const CashierCenteredMessage(
         icon: Icons.receipt_long_rounded,
         color: AppColors.textHint,

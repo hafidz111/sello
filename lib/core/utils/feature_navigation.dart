@@ -13,8 +13,10 @@ import 'package:sello/widgets/common/app_snackbar.dart';
 Future<void> openFeature(BuildContext context, FeatureItem feature) async {
   switch (feature.id) {
     case 'cashier':
+      context.read<NavigationProvider>().openCashier(mode: CashierMode.manual);
+      return;
     case 'voice_cashier':
-      context.read<NavigationProvider>().openCashier();
+      context.read<NavigationProvider>().openCashier(mode: CashierMode.voice);
       return;
     case 'product_scan':
       context.read<NavigationProvider>().openCashier(mode: CashierMode.scan);

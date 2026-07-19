@@ -29,7 +29,7 @@ class NavigationProvider extends ChangeNotifier {
     }
   }
 
-  void openCashier({CashierMode mode = CashierMode.voice}) {
+  void openCashier({CashierMode mode = CashierMode.manual}) {
     _pendingCashierMode = mode;
     _currentIndex = berandaIndex;
     notifyListeners();

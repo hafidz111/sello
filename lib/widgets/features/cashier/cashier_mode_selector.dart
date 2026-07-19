@@ -37,6 +37,16 @@ class CashierModeSelector extends StatelessWidget {
         children: [
           Expanded(
             child: CashierModeButton(
+              icon: Icons.edit_note_rounded,
+              label: 'Manual',
+              isSelected: mode == CashierMode.manual,
+              selectedColor: selectedColor,
+              unselectedColor: unselectedColor,
+              onTap: () => onModeChanged(CashierMode.manual),
+            ),
+          ),
+          Expanded(
+            child: CashierModeButton(
               icon: Icons.mic_rounded,
               label: 'Suara',
               isSelected: mode == CashierMode.voice,

@@ -34,6 +34,13 @@ abstract final class Responsive {
   static double featureGridAspectRatio(BuildContext context) =>
       isTablet(context) ? 1.2 : 1.15;
 
+  static double floatingNavBarHeight(BuildContext context) =>
+      (isTablet(context) ? 72.0 : 68.0) + 12.0;
+
+  /// Space reserved for [FloatingBottomNav] when [Scaffold.extendBody] is true.
+  static double floatingBottomNavInset(BuildContext context) =>
+      floatingNavBarHeight(context) + MediaQuery.paddingOf(context).bottom;
+
   static double bottomScrollPadding(BuildContext context) =>
-      isTablet(context) ? 110 : 100;
+      floatingBottomNavInset(context) + 8;
 }

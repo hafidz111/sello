@@ -39,6 +39,13 @@ Future<void> showCashierModeSheet(BuildContext context) {
               ),
               const SizedBox(height: 16),
               _ModeOption(
+                icon: Icons.edit_note_rounded,
+                title: 'Manual',
+                subtitle: 'Pilih produk dan jumlah secara langsung',
+                onTap: () => _select(sheetContext, CashierMode.manual),
+              ),
+              const SizedBox(height: 10),
+              _ModeOption(
                 icon: Icons.mic_rounded,
                 title: 'Suara',
                 subtitle: 'Ucapkan nama barang dan jumlahnya',

@@ -4,14 +4,19 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:sello/models/product.dart';
 import 'package:sello/models/product_match_result.dart';
+import 'package:sello/models/reference_item.dart';
 import 'package:sello/providers/auth_provider.dart';
 import 'package:sello/providers/dashboard_provider.dart';
 import 'package:sello/screens/features/product_list_screen.dart';
 import 'package:sello/screens/features/product_register_screen.dart';
 import 'package:sello/services/ai_service.dart';
 import 'package:sello/services/product_service.dart';
+import 'package:sello/services/reference_barcode_service.dart';
 import 'package:sello/styles/app_colors.dart';
 import 'package:sello/widgets/common/app_snackbar.dart';
+import 'package:sello/widgets/features/cashier/cashier_barcode_scanner.dart';
+import 'package:sello/widgets/features/cashier/global_barcode_match_sheet.dart';
+import 'package:sello/widgets/features/cashier/scan_method_selector.dart';
 import 'package:sello/widgets/features/product_scan/scan_bottom_panel.dart';
 import 'package:sello/widgets/features/product_scan/scan_camera_area.dart';
 
@@ -25,6 +30,7 @@ class CashierScanSection extends StatefulWidget {
 class _CashierScanSectionState extends State<CashierScanSection> {
   final _aiService = AiService.instance;
   final _productService = ProductService.instance;
+  final _referenceService = ReferenceBarcodeService.instance;
   final _customerController = TextEditingController();
 
   CameraController? _controller;
@@ -34,9 +40,11 @@ class _CashierScanSectionState extends State<CashierScanSection> {
   bool _isRecording = false;
   String? _cameraError;
 
+  ScanCaptureMode _captureMode = ScanCaptureMode.barcode;
   List<Product> _catalog = [];
   ProductMatchResult? _lastMatch;
   Product? _claimedProduct;
+  String? _lastScannedCode;
   int _quantity = 1;
 
   @override
@@ -146,6 +154,109 @@ class _CashierScanSectionState extends State<CashierScanSection> {
     _initCamera();
   }
 
+  void _setCaptureMode(ScanCaptureMode mode) {
+    if (_captureMode == mode) return;
+    setState(() {
+      _captureMode = mode;
+      _resetScan();
+    });
+  }
+
+  Future<void> _handleBarcode(String code) async {
+    if (_catalog.isEmpty) {
+      await _loadCatalog();
+    }
+
+    var product = _productService.findProductByCodeInCatalog(_catalog, code);
+
+    if (product == null) {
+      if (!mounted) return;
+      final userId = context.read<AuthProvider>().userId;
+      try {
+        product = await _productService.findProductByCode(
+          userId: userId,
+          codeValue: code,
+        );
+      } on ProductException catch (e) {
+        if (!mounted) return;
+        AppSnackbar.error(context, e.message);
+        return;
+      }
+    }
+
+    if (!mounted) return;
+
+    if (product != null) {
+      setState(() {
+        _lastScannedCode = code;
+        _lastMatch = null;
+        _claimedProduct = product;
+        _quantity = 1;
+      });
+      AppSnackbar.success(context, 'Produk ditemukan: ${product.name}');
+      return;
+    }
+
+    ReferenceItem? reference;
+    try {
+      reference = await _referenceService.findByCode(code);
+    } on ReferenceBarcodeException catch (e) {
+      if (!mounted) return;
+      AppSnackbar.error(context, e.message);
+      return;
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      _lastScannedCode = code;
+      _lastMatch = null;
+      _claimedProduct = null;
+      _quantity = 1;
+    });
+
+    if (reference != null) {
+      final alternate = reference.barcodeValues
+          .where((value) => value != code)
+          .toList();
+      await GlobalBarcodeMatchSheet.show(
+        context,
+        scannedCode: code,
+        reference: reference,
+        onRegister: () => _openRegisterFromReference(
+          reference!,
+          scannedCode: code,
+          alternateBarcode: alternate.isNotEmpty ? alternate.first : null,
+        ),
+      );
+      return;
+    }
+
+    AppSnackbar.warning(
+      context,
+      'Barcode $code belum terdaftar di katalog.',
+    );
+  }
+
+  Future<void> _openRegisterFromReference(
+    ReferenceItem reference, {
+    required String scannedCode,
+    String? alternateBarcode,
+  }) async {
+    final created = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => ProductRegisterScreen(
+          initialName: reference.name,
+          initialPrimaryBarcode: scannedCode,
+          initialAlternateBarcode: alternateBarcode,
+        ),
+      ),
+    );
+    if (created == true) {
+      await _loadCatalog();
+    }
+  }
+
   Future<void> _detectProduct() async {
     if (_catalog.isEmpty) {
       AppSnackbar.warning(
@@ -164,6 +275,7 @@ class _CashierScanSectionState extends State<CashierScanSection> {
       _isDetecting = true;
       _lastMatch = null;
       _claimedProduct = null;
+      _lastScannedCode = null;
       _quantity = 1;
     });
 
@@ -237,6 +349,7 @@ class _CashierScanSectionState extends State<CashierScanSection> {
       setState(() {
         _lastMatch = null;
         _claimedProduct = null;
+        _lastScannedCode = null;
         _quantity = 1;
         _isRecording = false;
         _customerController.clear();
@@ -258,19 +371,27 @@ class _CashierScanSectionState extends State<CashierScanSection> {
     setState(() {
       _lastMatch = null;
       _claimedProduct = null;
+      _lastScannedCode = null;
       _quantity = 1;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final isBarcodeMode = _captureMode == ScanCaptureMode.barcode;
+
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+          padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
             children: [
+              Expanded(
+                child: ScanMethodSelector(
+                  mode: _captureMode,
+                  onChanged: _setCaptureMode,
+                ),
+              ),
               IconButton(
                 onPressed: _openCatalog,
                 icon: const Icon(Icons.inventory_2_outlined),
@@ -287,19 +408,26 @@ class _CashierScanSectionState extends State<CashierScanSection> {
           ),
         ),
         Expanded(
-          child: ScanCameraArea(
-            isInitializingCamera: _isInitializingCamera,
-            cameraError: _cameraError,
-            controller: _controller,
-            isDetecting: _isDetecting,
-            onRetryCamera: _retryCamera,
-          ),
+          child: isBarcodeMode
+              ? CashierBarcodeScanner(
+                  enabled: !_isRecording && _claimedProduct == null,
+                  onBarcode: _handleBarcode,
+                )
+              : ScanCameraArea(
+                  isInitializingCamera: _isInitializingCamera,
+                  cameraError: _cameraError,
+                  controller: _controller,
+                  isDetecting: _isDetecting,
+                  onRetryCamera: _retryCamera,
+                ),
         ),
         ScanBottomPanel(
           isLoadingCatalog: _isLoadingCatalog,
           catalogCount: _catalog.length,
+          captureMode: _captureMode,
           lastMatch: _lastMatch,
           claimedProduct: _claimedProduct,
+          lastScannedCode: _lastScannedCode,
           quantity: _quantity,
           isDetecting: _isDetecting,
           isRecording: _isRecording,

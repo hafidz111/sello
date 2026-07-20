@@ -12,6 +12,7 @@ import 'package:sello/services/ai_service.dart';
 import 'package:sello/services/product_service.dart';
 import 'package:sello/styles/app_colors.dart';
 import 'package:sello/widgets/common/app_snackbar.dart';
+import 'package:sello/widgets/features/cashier/scan_method_selector.dart';
 import 'package:sello/widgets/features/product_scan/scan_bottom_panel.dart';
 import 'package:sello/widgets/features/product_scan/scan_camera_area.dart';
 
@@ -291,8 +292,10 @@ class _ProductScanScreenState extends State<ProductScanScreen> {
           ScanBottomPanel(
             isLoadingCatalog: _isLoadingCatalog,
             catalogCount: _catalog.length,
+            captureMode: ScanCaptureMode.visual,
             lastMatch: _lastMatch,
             claimedProduct: _claimedProduct,
+            lastScannedCode: null,
             quantity: _quantity,
             isDetecting: _isDetecting,
             isRecording: _isRecording,

@@ -4,8 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:sello/core/utils/barcode_normalizer.dart';
 import 'package:sello/core/utils/responsive.dart';
+import 'package:sello/models/product_barcode_type.dart';
 import 'package:sello/providers/auth_provider.dart';
+import 'package:sello/screens/features/barcode_scan_screen.dart';
 import 'package:sello/services/ai_service.dart';
 import 'package:sello/services/product_service.dart';
 import 'package:sello/styles/app_colors.dart';
@@ -14,7 +17,16 @@ import 'package:sello/widgets/features/product_register/register_form_body.dart'
 import 'package:speech_to_text/speech_to_text.dart';
 
 class ProductRegisterScreen extends StatefulWidget {
-  const ProductRegisterScreen({super.key});
+  const ProductRegisterScreen({
+    super.key,
+    this.initialName,
+    this.initialPrimaryBarcode,
+    this.initialAlternateBarcode,
+  });
+
+  final String? initialName;
+  final String? initialPrimaryBarcode;
+  final String? initialAlternateBarcode;
 
   @override
   State<ProductRegisterScreen> createState() => _ProductRegisterScreenState();
@@ -25,6 +37,8 @@ class _ProductRegisterScreenState extends State<ProductRegisterScreen> {
   final _priceController = TextEditingController(text: '0');
   final _costController = TextEditingController(text: '0');
   final _stockController = TextEditingController(text: '0');
+  final _barcodeController = TextEditingController();
+  final _alternateBarcodeController = TextEditingController();
   final _picker = ImagePicker();
   final _productService = ProductService.instance;
   final _aiService = AiService.instance;
@@ -34,11 +48,26 @@ class _ProductRegisterScreenState extends State<ProductRegisterScreen> {
   bool _isSaving = false;
   bool _isListeningVoice = false;
   bool _speechReady = false;
+  ProductBarcodeType? _barcodeType;
+  ProductBarcodeType? _alternateBarcodeType;
 
   @override
   void initState() {
     super.initState();
+    _nameController.text = widget.initialName ?? '';
+    _barcodeController.text = widget.initialPrimaryBarcode ?? '';
+    _alternateBarcodeController.text = widget.initialAlternateBarcode ?? '';
+    if (_barcodeController.text.isNotEmpty) {
+      _barcodeType = BarcodeNormalizer.inferType(_barcodeController.text);
+    }
+    if (_alternateBarcodeController.text.isNotEmpty) {
+      _alternateBarcodeType = BarcodeNormalizer.inferType(
+        _alternateBarcodeController.text,
+      );
+    }
     _initSpeech();
+    _barcodeController.addListener(_onBarcodeTextChanged);
+    _alternateBarcodeController.addListener(_onBarcodeTextChanged);
   }
 
   @override
@@ -47,6 +76,8 @@ class _ProductRegisterScreenState extends State<ProductRegisterScreen> {
     _priceController.dispose();
     _costController.dispose();
     _stockController.dispose();
+    _barcodeController.dispose();
+    _alternateBarcodeController.dispose();
     if (_speech.isListening) {
       _speech.stop();
     }
@@ -61,6 +92,25 @@ class _ProductRegisterScreenState extends State<ProductRegisterScreen> {
       },
     );
     if (mounted) setState(() => _speechReady = ready);
+  }
+
+  void _onBarcodeTextChanged() {
+    if (!mounted) return;
+    setState(() {});
+  }
+
+  void _handleBarcodeScan(BarcodeScanResult result) {
+    setState(() {
+      _barcodeController.text = result.value;
+      _barcodeType = result.type;
+    });
+  }
+
+  void _handleAlternateBarcodeScan(BarcodeScanResult result) {
+    setState(() {
+      _alternateBarcodeController.text = result.value;
+      _alternateBarcodeType = result.type;
+    });
   }
 
   Future<void> _capturePhoto(String angle) async {
@@ -172,6 +222,8 @@ class _ProductRegisterScreenState extends State<ProductRegisterScreen> {
     final userId = context.read<AuthProvider>().userId;
 
     try {
+      final barcodeText = _barcodeController.text.trim();
+      final alternateText = _alternateBarcodeController.text.trim();
       await _productService.createProduct(
         userId: userId,
         name: name,
@@ -179,6 +231,12 @@ class _ProductRegisterScreenState extends State<ProductRegisterScreen> {
         costPrice: costPrice,
         stock: stock,
         imagesByAngle: Map.from(_photos),
+        codeType: barcodeText.isEmpty ? null : _barcodeType,
+        codeValue: barcodeText.isEmpty ? null : barcodeText,
+        alternateCodeType:
+            alternateText.isEmpty ? null : _alternateBarcodeType,
+        alternateCodeValue: alternateText.isEmpty ? null : alternateText,
+        autoGenerateBarcode: barcodeText.isEmpty,
       );
       if (!mounted) return;
       AppSnackbar.success(context, 'Produk berhasil didaftarkan.');
@@ -213,11 +271,20 @@ class _ProductRegisterScreenState extends State<ProductRegisterScreen> {
           priceController: _priceController,
           costController: _costController,
           stockController: _stockController,
+          barcodeController: _barcodeController,
+          alternateBarcodeController: _alternateBarcodeController,
+          barcodeType: _barcodeType,
+          alternateBarcodeType: _alternateBarcodeType,
           photos: _photos,
           isSaving: _isSaving,
           isListeningVoice: _isListeningVoice,
           onCapturePhoto: _capturePhoto,
           onFillFromVoice: _fillFromVoice,
+          onBarcodeTypeChanged: (type) => setState(() => _barcodeType = type),
+          onAlternateBarcodeTypeChanged: (type) =>
+              setState(() => _alternateBarcodeType = type),
+          onScanResult: _handleBarcodeScan,
+          onAlternateScanResult: _handleAlternateBarcodeScan,
           onSave: _save,
         ),
       ),

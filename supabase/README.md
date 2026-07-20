@@ -24,6 +24,8 @@ Cek status di **Supabase Dashboard → Database → Migrations**.
 | `20260714184500_fix_requesting_user_id_jwt_sub.sql` | Perbaiki `requesting_user_id()`: pakai `auth.jwt()->>'sub'` (Firebase UID bukan UUID) |
 | `20260716190000_user_subscriptions.sql` | Tabel `user_subscriptions` (plan `free`/`pro`) + RLS per user |
 | `20260716193000_device_tokens.sql` | Token FCM perangkat untuk push notifikasi (stok menipis) |
+| `20260720190000_product_barcodes.sql` | Kolom `code_type` / `code_value` + index unik barcode per user |
+| `20260720200000_reference_and_product_barcodes.sql` | Database barcode global + multi-barcode per produk toko |
 
 ## Notifikasi stok menipis
 

@@ -60,6 +60,15 @@ class ProductListTile extends StatelessWidget {
                       '${formatRupiah(product.price)} · Stok ${product.stock} pcs',
                       style: AppTextStyles.bodySmall,
                     ),
+                    if (product.hasBarcode)
+                      Text(
+                        product.allBarcodeValues.length > 1
+                            ? 'Barcode ${product.allBarcodeValues.join(' / ')}'
+                            : 'Barcode ${product.allBarcodeValues.first}',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
                     if (isLowStock)
                       Text(
                         'Stok menipis',

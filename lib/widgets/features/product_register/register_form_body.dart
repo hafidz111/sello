@@ -1,10 +1,13 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:sello/models/product_barcode_type.dart';
+import 'package:sello/screens/features/barcode_scan_screen.dart';
 import 'package:sello/services/product_service.dart';
 import 'package:sello/styles/app_colors.dart';
 import 'package:sello/styles/app_text_styles.dart';
 import 'package:sello/widgets/common/overwrite_zero_number_field.dart';
+import 'package:sello/widgets/features/product_register/register_barcode_field.dart';
 import 'package:sello/widgets/features/product_register/register_photo_slot.dart';
 
 class RegisterFormBody extends StatelessWidget {
@@ -14,11 +17,19 @@ class RegisterFormBody extends StatelessWidget {
     required this.priceController,
     required this.costController,
     required this.stockController,
+    required this.barcodeController,
+    required this.alternateBarcodeController,
+    required this.barcodeType,
+    required this.alternateBarcodeType,
     required this.photos,
     required this.isSaving,
     required this.isListeningVoice,
     required this.onCapturePhoto,
     required this.onFillFromVoice,
+    required this.onBarcodeTypeChanged,
+    required this.onAlternateBarcodeTypeChanged,
+    required this.onScanResult,
+    required this.onAlternateScanResult,
     required this.onSave,
   });
 
@@ -26,11 +37,19 @@ class RegisterFormBody extends StatelessWidget {
   final TextEditingController priceController;
   final TextEditingController costController;
   final TextEditingController stockController;
+  final TextEditingController barcodeController;
+  final TextEditingController alternateBarcodeController;
+  final ProductBarcodeType? barcodeType;
+  final ProductBarcodeType? alternateBarcodeType;
   final Map<String, Uint8List> photos;
   final bool isSaving;
   final bool isListeningVoice;
   final ValueChanged<String> onCapturePhoto;
   final VoidCallback onFillFromVoice;
+  final ValueChanged<ProductBarcodeType?> onBarcodeTypeChanged;
+  final ValueChanged<ProductBarcodeType?> onAlternateBarcodeTypeChanged;
+  final void Function(BarcodeScanResult result) onScanResult;
+  final void Function(BarcodeScanResult result) onAlternateScanResult;
   final VoidCallback onSave;
 
   @override
@@ -74,6 +93,27 @@ class RegisterFormBody extends StatelessWidget {
         OverwriteZeroNumberField(
           controller: stockController,
           decoration: _inputDecoration('Stok awal (pcs)', '50'),
+        ),
+        const SizedBox(height: 20),
+        RegisterBarcodeField(
+          controller: barcodeController,
+          codeType: barcodeType,
+          enabled: !isSaving,
+          title: 'Barcode utama (kolom B)',
+          hint:
+              'Scan barcode kemasan atau kosongkan agar Sello buat Code 128 otomatis.',
+          onCodeTypeChanged: onBarcodeTypeChanged,
+          onScanResult: onScanResult,
+        ),
+        const SizedBox(height: 16),
+        RegisterBarcodeField(
+          controller: alternateBarcodeController,
+          codeType: alternateBarcodeType,
+          enabled: !isSaving,
+          title: 'Barcode alternatif (kolom D, opsional)',
+          hint: 'Isi jika produk punya barcode kedua seperti di file Excel.',
+          onCodeTypeChanged: onAlternateBarcodeTypeChanged,
+          onScanResult: onAlternateScanResult,
         ),
         const SizedBox(height: 20),
         Text('Foto referensi', style: AppTextStyles.titleMedium),

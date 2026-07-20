@@ -4,14 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:sello/core/constants/stock_constants.dart';
+import 'package:sello/core/utils/barcode_normalizer.dart';
 import 'package:sello/core/utils/responsive.dart';
 import 'package:sello/models/product.dart';
+import 'package:sello/models/product_barcode_type.dart';
 import 'package:sello/providers/auth_provider.dart';
+import 'package:sello/screens/features/barcode_scan_screen.dart';
 import 'package:sello/services/product_service.dart';
 import 'package:sello/styles/app_colors.dart';
 import 'package:sello/styles/app_text_styles.dart';
 import 'package:sello/widgets/common/app_snackbar.dart';
 import 'package:sello/widgets/common/overwrite_zero_number_field.dart';
+import 'package:sello/widgets/features/product_detail/product_barcode_preview.dart';
+import 'package:sello/widgets/features/product_register/register_barcode_field.dart';
 import 'package:sello/widgets/features/product_register/register_photo_slot.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -30,8 +35,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   final _priceController = TextEditingController();
   final _costController = TextEditingController();
   final _stockController = TextEditingController();
+  final _barcodeController = TextEditingController();
+  final _alternateBarcodeController = TextEditingController();
 
   Product? _product;
+  ProductBarcodeType? _barcodeType;
+  ProductBarcodeType? _alternateBarcodeType;
   final Map<String, Uint8List> _newPhotos = {};
   bool _isLoading = true;
   bool _isSaving = false;
@@ -40,7 +49,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   @override
   void initState() {
     super.initState();
+    _barcodeController.addListener(_onBarcodeTextChanged);
+    _alternateBarcodeController.addListener(_onBarcodeTextChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+  }
+
+  void _onBarcodeTextChanged() {
+    if (!mounted) return;
+    setState(() {});
   }
 
   @override
@@ -49,6 +65,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     _priceController.dispose();
     _costController.dispose();
     _stockController.dispose();
+    _barcodeController.dispose();
+    _alternateBarcodeController.dispose();
     super.dispose();
   }
 
@@ -57,6 +75,47 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     _priceController.text = product.price.toString();
     _costController.text = product.costPrice.toString();
     _stockController.text = product.stock.toString();
+
+    String? primaryCode;
+    ProductBarcodeType? primaryType;
+    String? alternateCode;
+    ProductBarcodeType? alternateType;
+
+    if (product.barcodes.isNotEmpty) {
+      for (final entry in product.barcodes) {
+        if (entry.isPrimary) {
+          primaryCode = entry.codeValue;
+          primaryType = entry.codeType;
+        } else if (alternateCode == null) {
+          alternateCode = entry.codeValue;
+          alternateType = entry.codeType;
+        }
+      }
+      primaryCode ??= product.barcodes.first.codeValue;
+      primaryType ??= product.barcodes.first.codeType;
+    } else {
+      primaryCode = product.codeValue;
+      primaryType = product.codeType;
+    }
+
+    _barcodeController.text = primaryCode ?? '';
+    _barcodeType = primaryType;
+    _alternateBarcodeController.text = alternateCode ?? '';
+    _alternateBarcodeType = alternateType;
+  }
+
+  void _handleBarcodeScan(BarcodeScanResult result) {
+    setState(() {
+      _barcodeController.text = result.value;
+      _barcodeType = result.type;
+    });
+  }
+
+  void _handleAlternateBarcodeScan(BarcodeScanResult result) {
+    setState(() {
+      _alternateBarcodeController.text = result.value;
+      _alternateBarcodeType = result.type;
+    });
   }
 
   String? _existingUrlForAngle(String angle) {
@@ -139,6 +198,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
     setState(() => _isSaving = true);
     final userId = context.read<AuthProvider>().userId;
+    final barcodeText = _barcodeController.text.trim();
+    final alternateText = _alternateBarcodeController.text.trim();
+    final hadBarcode = product.hasBarcode;
     try {
       final updated = await _productService.updateProduct(
         userId: userId,
@@ -147,6 +209,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         price: price,
         costPrice: cost,
         stock: stock,
+        codeType: barcodeText.isEmpty ? null : _barcodeType,
+        codeValue: barcodeText.isEmpty ? null : barcodeText,
+        alternateCodeType:
+            alternateText.isEmpty ? null : _alternateBarcodeType,
+        alternateCodeValue: alternateText.isEmpty ? null : alternateText,
+        clearBarcode: barcodeText.isEmpty && hadBarcode,
         newImagesByAngle: Map<String, Uint8List>.from(_newPhotos),
       );
       if (!mounted) return;
@@ -327,6 +395,41 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       enabled: !busy,
                       onChanged: (_) => setState(() {}),
                       decoration: _decoration('Stok (pcs)', '50'),
+                    ),
+                    const SizedBox(height: 20),
+                    ProductBarcodePreview(product: product),
+                    const SizedBox(height: 12),
+                    RegisterBarcodeField(
+                      controller: _barcodeController,
+                      codeType: _barcodeType ??
+                          (BarcodeNormalizer.isEmpty(_barcodeController.text)
+                              ? null
+                              : BarcodeNormalizer.inferType(
+                                  _barcodeController.text,
+                                )),
+                      enabled: !busy,
+                      title: 'Barcode utama (kolom B)',
+                      onCodeTypeChanged: (type) =>
+                          setState(() => _barcodeType = type),
+                      onScanResult: _handleBarcodeScan,
+                    ),
+                    const SizedBox(height: 12),
+                    RegisterBarcodeField(
+                      controller: _alternateBarcodeController,
+                      codeType: _alternateBarcodeType ??
+                          (BarcodeNormalizer.isEmpty(
+                                _alternateBarcodeController.text,
+                              )
+                              ? null
+                              : BarcodeNormalizer.inferType(
+                                  _alternateBarcodeController.text,
+                                )),
+                      enabled: !busy,
+                      title: 'Barcode alternatif (kolom D, opsional)',
+                      hint: 'Isi jika produk punya barcode kedua.',
+                      onCodeTypeChanged: (type) =>
+                          setState(() => _alternateBarcodeType = type),
+                      onScanResult: _handleAlternateBarcodeScan,
                     ),
                     const SizedBox(height: 20),
                     Text('Foto referensi', style: AppTextStyles.titleMedium),

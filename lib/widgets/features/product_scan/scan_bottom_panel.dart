@@ -5,6 +5,7 @@ import 'package:sello/models/product_match_result.dart';
 import 'package:sello/styles/app_colors.dart';
 import 'package:sello/styles/app_text_styles.dart';
 import 'package:sello/widgets/features/cashier/cashier_customer_field.dart';
+import 'package:sello/widgets/features/cashier/scan_method_selector.dart';
 import 'package:sello/widgets/features/product_scan/scan_claimed_product_card.dart';
 import 'package:sello/widgets/features/product_scan/scan_match_card.dart';
 
@@ -13,8 +14,10 @@ class ScanBottomPanel extends StatelessWidget {
     super.key,
     required this.isLoadingCatalog,
     required this.catalogCount,
+    required this.captureMode,
     required this.lastMatch,
     required this.claimedProduct,
+    required this.lastScannedCode,
     required this.quantity,
     required this.isDetecting,
     required this.isRecording,
@@ -30,8 +33,10 @@ class ScanBottomPanel extends StatelessWidget {
 
   final bool isLoadingCatalog;
   final int catalogCount;
+  final ScanCaptureMode captureMode;
   final ProductMatchResult? lastMatch;
   final Product? claimedProduct;
+  final String? lastScannedCode;
   final int quantity;
   final bool isDetecting;
   final bool isRecording;
@@ -50,6 +55,7 @@ class ScanBottomPanel extends StatelessWidget {
     final claimed = claimedProduct;
     final match = lastMatch;
     final catalogIsEmpty = catalogCount == 0;
+    final isBarcodeMode = captureMode == ScanCaptureMode.barcode;
 
     return Container(
       width: double.infinity,
@@ -78,12 +84,42 @@ class ScanBottomPanel extends StatelessWidget {
             ),
           ] else ...[
             Text(
-              'Arahkan kamera ke produk, lalu ketuk deteksi.',
+              isBarcodeMode
+                  ? 'Arahkan kamera ke barcode produk.'
+                  : 'Arahkan kamera ke produk, lalu ketuk deteksi.',
               style: AppTextStyles.bodyMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
-            if (match != null && claimed == null) ...[
+            if (isBarcodeMode &&
+                lastScannedCode != null &&
+                claimed == null) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.warning),
+                ),
+                child: Text(
+                  'Barcode $lastScannedCode belum terdaftar. '
+                  'Daftarkan produk atau scan barcode lain.',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.warning,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: onOpenRegister,
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('Daftar Produk Baru'),
+              ),
+              const SizedBox(height: 8),
+            ],
+            if (!isBarcodeMode && match != null && claimed == null) ...[
               ScanMatchCard(match: match, isClaimed: false),
               const SizedBox(height: 8),
               OutlinedButton.icon(
@@ -144,7 +180,7 @@ class ScanBottomPanel extends StatelessWidget {
                 ),
               ),
               TextButton(onPressed: onResetScan, child: const Text('Scan ulang')),
-            ] else ...[
+            ] else if (!isBarcodeMode) ...[
               FilledButton.icon(
                 onPressed: isDetecting || !canDetect ? null : onDetect,
                 style: FilledButton.styleFrom(
@@ -164,7 +200,8 @@ class ScanBottomPanel extends StatelessWidget {
           ],
           const SizedBox(height: 8),
           Text(
-            '$catalogCount produk di katalog. Arahkan kamera ke produk atau barcode.',
+            '$catalogCount produk di katalog. '
+            '${isBarcodeMode ? 'Scan Code 128 atau barcode kemasan.' : 'Scan foto atau barcode.'}',
             style: AppTextStyles.bodySmall,
             textAlign: TextAlign.center,
           ),

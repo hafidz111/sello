@@ -6,7 +6,6 @@ import 'package:sello/providers/subscription_provider.dart';
 import 'package:sello/screens/features/education_screen.dart';
 import 'package:sello/screens/features/pricing_screen.dart';
 import 'package:sello/screens/features/product_list_screen.dart';
-import 'package:sello/screens/features/reference_barcode_import_screen.dart';
 import 'package:sello/screens/features/translate_export_screen.dart';
 import 'package:sello/styles/app_colors.dart';
 import 'package:sello/styles/app_text_styles.dart';
@@ -31,14 +30,6 @@ class MenuScreen extends StatelessWidget {
   Future<void> _openTranslateExport(BuildContext context) {
     return Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const TranslateExportScreen()),
-    );
-  }
-
-  Future<void> _openReferenceImport(BuildContext context) {
-    return Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const ReferenceBarcodeImportScreen(),
-      ),
     );
   }
 
@@ -88,14 +79,6 @@ class MenuScreen extends StatelessWidget {
                   subtitle:
                       'Katalog, tambah produk, stok, dan harga dalam satu tempat',
                   onTap: () => _openProducts(context),
-                ),
-                _MenuTile(
-                  icon: Icons.qr_code_2_rounded,
-                  color: const Color(0xFF6366F1),
-                  title: 'Database Barcode Global',
-                  subtitle:
-                      'Impor Excel/CSV (A item, B barcode, C flag, D barcode kedua)',
-                  onTap: () => _openReferenceImport(context),
                 ),
                 _MenuTile(
                   icon: Icons.translate_rounded,
